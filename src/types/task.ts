@@ -1,0 +1,22 @@
+export type TaskType = 'main' | 'demon';
+
+export interface Task {
+	id: string;
+	name: string;
+	type: TaskType;
+	isCompleted: boolean;
+	points: number;
+	entryCost?: number; // 入场积分（仅付费挑战）
+	isStarted?: boolean; // 是否已开始（已支付入场费）
+	createdAt: Date;
+	completedAt?: Date;
+	expiresAt?: Date;
+}
+
+export interface TaskFormData {
+	name: string;
+	type: TaskType;
+	points: number;
+	entryCost?: number; // 入场积分（仅付费挑战）
+	expiresAt?: Date;
+}
