@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
 	exportData,
 	importData,
@@ -6,20 +6,6 @@ import {
 } from '../utils/storage';
 
 export const DataManager: React.FC = () => {
-	const [showManager, setShowManager] = useState(false);
-
-	// 阻止背景滚动
-	useEffect(() => {
-		if (showManager) {
-			document.body.style.overflow = 'hidden';
-		} else {
-			document.body.style.overflow = 'unset';
-		}
-		return () => {
-			document.body.style.overflow = 'unset';
-		};
-	}, [showManager]);
-
 	const handleExport = () => {
 		const data = exportData();
 		const blob = new Blob([data], { type: 'application/json' });
@@ -73,59 +59,88 @@ export const DataManager: React.FC = () => {
 		}
 	};
 
-	if (!showManager) {
-		return (
-			<button
-				onClick={() => setShowManager(true)}
-				className="fixed bottom-20 right-6 bg-gradient-to-r from-gray-600 to-gray-700 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center text-xl z-40"
-				aria-label="数据管理">
-				⚙️
-			</button>
-		);
-	}
-
 	return (
-		<>
-			{/* 蒙层 */}
-			<div
-				className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-				onClick={() => setShowManager(false)}
-			/>
-
-			{/* 弹窗 */}
-			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-				<div
-					onClick={e => e.stopPropagation()}
-					className="glass-effect rounded-2xl card-shadow-lg p-5 border border-white/50 min-w-[280px] max-w-md">
-					<div className="flex justify-between items-center mb-4">
-						<h3 className="font-black text-gray-800 text-sm uppercase tracking-wide">
-							数据管理
-						</h3>
-						<button
-							onClick={() => setShowManager(false)}
-							className="text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-							✕
-						</button>
+		<div className="w-full">
+			<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
+				<div className="text-center mb-2">
+					<div className="text-3xl mb-2">⚙️</div>
+					<div className="text-lg font-black text-gray-800 mb-1">
+						数据管理
 					</div>
-					<div className="space-y-2">
-						<button
-							onClick={handleExport}
-							className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all text-sm">
-							💾 导出数据
-						</button>
-						<button
-							onClick={handleImport}
-							className="w-full px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all text-sm">
-							📥 导入数据
-						</button>
-						<button
-							onClick={handleClear}
-							className="w-full px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all text-sm">
-							🗑️ 清除数据
-						</button>
+					<div className="text-sm text-gray-600">
+						备份、恢复或清除应用数据
 					</div>
 				</div>
 			</div>
-		</>
+
+			<div className="space-y-3">
+				<button
+					onClick={handleExport}
+					className="w-full glass-effect rounded-2xl card-shadow p-4 border-2 border-blue-200/50 hover:border-blue-300/50 transition-all active:scale-95">
+					<div className="flex items-center gap-4">
+						<div className="text-4xl flex-shrink-0">
+							💾
+						</div>
+						<div className="flex-1 text-left">
+							<h4 className="font-black text-gray-800 mb-1">
+								导出数据
+							</h4>
+							<p className="text-sm text-gray-600">
+								将应用数据导出为 JSON 文件备份
+							</p>
+						</div>
+					</div>
+				</button>
+
+				<button
+					onClick={handleImport}
+					className="w-full glass-effect rounded-2xl card-shadow p-4 border-2 border-green-200/50 hover:border-green-300/50 transition-all active:scale-95">
+					<div className="flex items-center gap-4">
+						<div className="text-4xl flex-shrink-0">
+							📥
+						</div>
+						<div className="flex-1 text-left">
+							<h4 className="font-black text-gray-800 mb-1">
+								导入数据
+							</h4>
+							<p className="text-sm text-gray-600">
+								从备份文件恢复应用数据
+							</p>
+						</div>
+					</div>
+				</button>
+
+				<button
+					onClick={handleClear}
+					className="w-full glass-effect rounded-2xl card-shadow p-4 border-2 border-red-200/50 hover:border-red-300/50 transition-all active:scale-95">
+					<div className="flex items-center gap-4">
+						<div className="text-4xl flex-shrink-0">
+							🗑️
+						</div>
+						<div className="flex-1 text-left">
+							<h4 className="font-black text-gray-800 mb-1">
+								清除数据
+							</h4>
+							<p className="text-sm text-red-600">
+								⚠️ 清除所有数据，此操作不可恢复
+							</p>
+						</div>
+					</div>
+				</button>
+			</div>
+
+			<div className="mt-6 glass-effect rounded-2xl card-shadow p-4 border border-white/50">
+				<div className="text-center">
+					<div className="text-xs text-gray-500 mb-2">
+						💡 提示
+					</div>
+					<p className="text-xs text-gray-400 leading-relaxed">
+						所有数据都存储在本地浏览器中，完全离线可用。
+						<br />
+						建议定期导出数据备份，以防数据丢失。
+					</p>
+				</div>
+			</div>
+		</div>
 	);
 };
