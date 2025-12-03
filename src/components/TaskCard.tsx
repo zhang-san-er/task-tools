@@ -11,7 +11,7 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-	const { toggleTaskCompletion, deleteTask, startTask, cancelTask, claimTask, unclaimTask } =
+	const { toggleTaskCompletion, deleteTask, startTask, claimTask, unclaimTask } =
 		useTaskStore();
 	const {
 		handleTaskStart,
@@ -155,20 +155,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 			confirmText: '删除',
 			cancelText: '取消',
 			confirmButtonClass: 'bg-red-500 text-white',
-		});
-	};
-
-	const handleCancel = () => {
-		setConfirmDialog({
-			open: true,
-			title: '取消任务',
-			message: '确定要取消这个任务吗？取消后可以重新开始。',
-			onConfirm: () => {
-				cancelTask(task.id);
-				setConfirmDialog({ ...confirmDialog, open: false });
-			},
-			confirmText: '确认',
-			cancelText: '取消',
 		});
 	};
 

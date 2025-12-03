@@ -1,5 +1,5 @@
 import React from 'react';
-import { getLevelProgress, getPointsForCurrentLevel, getPointsForNextLevel } from '../utils/levelCalculator';
+import { getPointsForCurrentLevel, getPointsForNextLevel } from '../utils/levelCalculator';
 
 interface ExperienceBarProps {
   experience: number;
