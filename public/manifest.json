@@ -6,8 +6,8 @@
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
-  "scope": "/",
-  "start_url": "/",
+  "scope": "/task-tools/",
+  "start_url": "/task-tools/",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
