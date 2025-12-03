@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'prompt', // 改为 prompt，确保用户控制更新
       includeAssets: ['favicon.ico', 'icons/*.png'],
       manifest: {
-        name: '习惯养成游戏',
-        short_name: '习惯游戏',
-        description: '游戏化的习惯追踪应用',
+        name: '任务平台',
+        short_name: '任务平台',
+        description: '高效的任务管理与奖励系统',
         theme_color: '#3b82f6',
         background_color: '#ffffff',
         display: 'standalone',

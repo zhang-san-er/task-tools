@@ -30,7 +30,7 @@ export const TaskList: React.FC = () => {
 				</h2>
 				<button
 					onClick={() => setShowForm(true)}
-					className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all">
+					className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-sm shadow-md hover:shadow-lg active:scale-95 transition-all">
 					✨ 新建
 				</button>
 			</div>
@@ -42,10 +42,10 @@ export const TaskList: React.FC = () => {
 			<div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
 				<button
 					onClick={() => setFilter('all')}
-					className={`px-4 py-2 rounded-xl whitespace-nowrap font-semibold text-sm transition-all shadow-sm active:scale-95 ${
+					className={`px-4 py-2 rounded-xl whitespace-nowrap font-semibold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 ${
 						filter === 'all'
-							? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200'
-							: 'bg-white/80 text-gray-600 shadow-sm'
+							? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50'
+							: 'bg-white/90 text-gray-600 shadow-sm hover:shadow-md'
 					}`}>
 					全部 ({tasks.length})
 				</button>
@@ -56,7 +56,7 @@ export const TaskList: React.FC = () => {
 							? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-orange-200'
 							: 'bg-white/80 text-gray-600 shadow-sm'
 					}`}>
-					⚡ 进行中 ({activeTasks.length})
+					🔥 进行中 ({activeTasks.length})
 				</button>
 				<button
 					onClick={() => setFilter('main')}
@@ -82,10 +82,10 @@ export const TaskList: React.FC = () => {
 				<div className="text-center py-16">
 					<div className="text-6xl mb-4">🎯</div>
 					<p className="text-lg font-bold text-gray-600 mb-2">
-						还没有悬赏
+						还没有任务
 					</p>
 					<p className="text-sm text-gray-400">
-						点击右上角"新建"发布你的第一个悬赏
+						点击右上角"新建"创建你的第一个任务
 					</p>
 				</div>
 			) : (

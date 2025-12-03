@@ -35,26 +35,37 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 			<div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
 				<div
 					onClick={e => e.stopPropagation()}
-					className="glass-effect rounded-2xl card-shadow-lg p-6 border border-white/50 w-full max-w-md">
-					<h3 className="text-lg font-black text-gray-800 mb-3 text-center">
-						{title}
-					</h3>
-					<p className="text-sm text-gray-600 mb-6 whitespace-pre-line">
-						{message}
-					</p>
-					<div className="flex gap-3">
-						<button
-							type="button"
-							onClick={onCancel}
-							className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 active:scale-95 transition-all">
-							{cancelText}
-						</button>
-						<button
-							type="button"
-							onClick={onConfirm}
-							className={`flex-1 px-4 py-2.5 rounded-xl font-bold shadow-sm active:scale-95 transition-all ${confirmButtonClass}`}>
-							{confirmText}
-						</button>
+					className="glass-effect rounded-2xl card-shadow-lg border border-white/50 w-full max-w-md max-h-[80vh] flex flex-col">
+					{/* 固定标题 */}
+					<div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200/50">
+						<h3 className="text-lg font-black text-gray-800 text-center">
+							{title}
+						</h3>
+					</div>
+					{/* 可滚动内容区域 */}
+					<div className="flex-1 overflow-y-auto px-6 py-4">
+						<p className="text-sm text-gray-600 whitespace-pre-line">
+							{message}
+						</p>
+					</div>
+					{/* 固定按钮区域 */}
+					<div className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200/50">
+						<div className={`flex gap-3 ${!cancelText ? 'justify-center' : ''}`}>
+							{cancelText && (
+								<button
+									type="button"
+									onClick={onCancel}
+									className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 active:scale-95 transition-all">
+									{cancelText}
+								</button>
+							)}
+							<button
+								type="button"
+								onClick={onConfirm}
+								className={`${cancelText ? 'flex-1' : 'px-8'} py-2.5 rounded-xl font-bold shadow-sm active:scale-95 transition-all ${confirmButtonClass}`}>
+								{confirmText}
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

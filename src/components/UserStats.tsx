@@ -4,10 +4,10 @@ import { LevelProgress } from './LevelProgress';
 import { ExperienceBar } from './HealthBar';
 
 export const UserStats: React.FC = () => {
-	const { level, totalPoints, experience, streak } = useUserStore();
+	const { level, totalPoints, experience } = useUserStore();
 
 	return (
-		<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
+		<div className="glass-effect rounded-3xl card-shadow p-6 mb-5 border border-white/60">
 			<div className="flex items-center justify-between mb-5">
 				<h2 className="text-lg font-bold text-gray-800">
 					我的档案
@@ -27,21 +27,13 @@ export const UserStats: React.FC = () => {
 
 				<ExperienceBar experience={experience} level={level} />
 
-				<div className="grid grid-cols-2 gap-3 pt-2">
-					<div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center border border-blue-200/50">
-						<div className="text-2xl font-black text-blue-600 mb-1">
+				<div className="pt-3">
+					<div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 text-center border border-blue-200/60 shadow-sm hover:shadow-md transition-shadow">
+						<div className="text-3xl font-black text-blue-600 mb-1.5">
 							{totalPoints}
 						</div>
-						<div className="text-xs font-medium text-blue-700">
+						<div className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
 							总积分
-						</div>
-					</div>
-					<div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-3 text-center border border-orange-200/50">
-						<div className="text-2xl font-black text-orange-600 mb-1">
-							{streak}
-						</div>
-						<div className="text-xs font-medium text-orange-700">
-							连续坚持
 						</div>
 					</div>
 				</div>

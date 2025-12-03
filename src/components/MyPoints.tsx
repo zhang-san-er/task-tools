@@ -39,7 +39,7 @@ export const MyPoints: React.FC<MyPointsProps> = ({ onNavigateToShop }) => {
 				</h3>
 				<button
 					onClick={onNavigateToShop}
-					className="w-full rounded-xl p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/50 hover:border-purple-300/50 transition-all active:scale-95 flex flex-col items-center justify-center gap-3">
+					className="w-full rounded-2xl p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/60 hover:border-purple-300/60 hover:shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-3">
 					<div className="text-5xl">🛍️</div>
 					<div className="text-sm font-bold text-gray-700">点击进入积分商城</div>
 				</button>
@@ -57,7 +57,7 @@ export const MyPoints: React.FC<MyPointsProps> = ({ onNavigateToShop }) => {
 							还没有完成记录
 						</p>
 						<p className="text-gray-400 text-xs mt-1">
-							完成悬赏后，记录会显示在这里
+							完成任务后，记录会显示在这里
 						</p>
 					</div>
 				) : (
@@ -65,7 +65,7 @@ export const MyPoints: React.FC<MyPointsProps> = ({ onNavigateToShop }) => {
 						{records.map(record => (
 							<div
 								key={record.id}
-								className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200/50">
+								className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/60 shadow-sm hover:shadow-md transition-shadow">
 								<div className="flex justify-between items-start mb-2">
 									<div className="flex-1">
 										<div className="flex items-center gap-2 mb-1">
@@ -101,7 +101,7 @@ export const MyPoints: React.FC<MyPointsProps> = ({ onNavigateToShop }) => {
 											+{record.points}
 										</div>
 										<div className="text-xs text-gray-500">
-											{record.cost && record.cost > 0 ? '净收益' : '悬赏积分'}
+											{record.cost && record.cost > 0 ? '净收益' : '任务积分'}
 										</div>
 									</div>
 								</div>

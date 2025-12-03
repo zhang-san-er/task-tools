@@ -3,6 +3,5 @@ export interface User {
   totalPoints: number;
   currentPoints: number;
   experience: number;
-  streak: number;
 }
 

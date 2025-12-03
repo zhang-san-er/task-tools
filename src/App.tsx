@@ -1,26 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { UserStats } from './components/UserStats';
 import { TaskList } from './components/TaskList';
 import { MyPoints } from './components/MyPoints';
 import { RewardShop } from './components/RewardShop';
 import { DataManager } from './components/DataManager';
-import { useUserStore } from './stores/userStore';
-import { useTaskStore } from './stores/taskStore';
 
 type Page = 'home' | 'points' | 'shop' | 'settings';
 
 const App: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState<Page>('home');
-	const { getExpiredTasks } = useTaskStore();
-
-	useEffect(() => {
-		// 更新连续天数
-		useUserStore.getState().updateStreak();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
+		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50">
 			<div className="w-full max-w-md mx-auto min-h-screen pb-24">
 				{/* 顶部装饰 */}
 				<div className="gradient-bg w-full h-32 rounded-b-3xl relative overflow-hidden">
@@ -30,10 +21,10 @@ const App: React.FC = () => {
 
 					<header className="relative z-10 text-center pt-8 px-4">
 						<h1 className="text-3xl font-black text-white mb-2 drop-shadow-lg">
-							⚡ 习惯打卡
+							🎯 任务平台
 						</h1>
 						<p className="text-white/90 text-sm font-medium">
-							每一次坚持，都是对未来的投资
+							高效管理任务，轻松获得奖励
 						</p>
 					</header>
 				</div>

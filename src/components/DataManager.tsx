@@ -28,7 +28,7 @@ export const DataManager: React.FC = () => {
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `habit-game-backup-${
+		a.download = `task-platform-backup-${
 			new Date().toISOString().split('T')[0]
 		}.json`;
 		document.body.appendChild(a);
@@ -98,7 +98,7 @@ export const DataManager: React.FC = () => {
 
 	return (
 		<div className="w-full">
-			<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
+			<div className="glass-effect rounded-3xl card-shadow p-6 mb-5 border border-white/60">
 				<div className="text-center mb-2">
 					<div className="text-3xl mb-2">⚙️</div>
 					<div className="text-lg font-black text-gray-800 mb-1">
@@ -113,7 +113,7 @@ export const DataManager: React.FC = () => {
 			<div className="space-y-3">
 				<button
 					onClick={handleExport}
-					className="w-full glass-effect rounded-2xl card-shadow p-4 border-2 border-blue-200/50 hover:border-blue-300/50 transition-all active:scale-95">
+					className="w-full glass-effect rounded-2xl card-shadow p-5 border-2 border-blue-200/60 hover:border-blue-300/60 hover:shadow-lg transition-all active:scale-95">
 					<div className="flex items-center gap-4">
 						<div className="text-4xl flex-shrink-0">
 							💾
@@ -131,7 +131,7 @@ export const DataManager: React.FC = () => {
 
 				<button
 					onClick={handleImport}
-					className="w-full glass-effect rounded-2xl card-shadow p-4 border-2 border-green-200/50 hover:border-green-300/50 transition-all active:scale-95">
+					className="w-full glass-effect rounded-2xl card-shadow p-5 border-2 border-green-200/60 hover:border-green-300/60 hover:shadow-lg transition-all active:scale-95">
 					<div className="flex items-center gap-4">
 						<div className="text-4xl flex-shrink-0">
 							📥
@@ -149,7 +149,7 @@ export const DataManager: React.FC = () => {
 
 				<button
 					onClick={handleClear}
-					className="w-full glass-effect rounded-2xl card-shadow p-4 border-2 border-red-200/50 hover:border-red-300/50 transition-all active:scale-95">
+					className="w-full glass-effect rounded-2xl card-shadow p-5 border-2 border-red-200/60 hover:border-red-300/60 hover:shadow-lg transition-all active:scale-95">
 					<div className="flex items-center gap-4">
 						<div className="text-4xl flex-shrink-0">
 							🗑️
@@ -166,7 +166,7 @@ export const DataManager: React.FC = () => {
 				</button>
 			</div>
 
-			<div className="mt-6 glass-effect rounded-2xl card-shadow p-4 border border-white/50">
+			<div className="mt-6 glass-effect rounded-2xl card-shadow p-5 border border-white/60">
 				<div className="text-center">
 					<div className="text-xs text-gray-500 mb-2">
 						💡 提示

@@ -2,13 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types/user';
 import { calculateLevel } from '../utils/levelCalculator';
-import { useTaskStore } from './taskStore';
 
 interface UserState extends User {
 	addPoints: (points: number) => void;
 	deductPoints: (points: number) => boolean;
 	addExperience: (amount: number) => void;
-	updateStreak: () => void;
 	handleTaskStart: (entryCost: number) => boolean;
 	handleTaskCompletion: (
 		taskId: string,
@@ -24,7 +22,6 @@ const INITIAL_USER: User = {
 	totalPoints: 0,
 	currentPoints: 0,
 	experience: 0,
-	streak: 0,
 };
 
 export const useUserStore = create<UserState>()(
@@ -82,30 +79,6 @@ export const useUserStore = create<UserState>()(
 				});
 			},
 
-			updateStreak: () => {
-				// 检查今天是否有完成的任务
-				const allTasks = useTaskStore.getState().tasks;
-				const today = new Date();
-				today.setHours(0, 0, 0, 0);
-
-				const hasCompletedToday = allTasks.some(task => {
-					if (!task.isCompleted || !task.completedAt)
-						return false;
-					const completedDate = new Date(task.completedAt);
-					completedDate.setHours(0, 0, 0, 0);
-					return (
-						completedDate.getTime() === today.getTime()
-					);
-				});
-
-				if (hasCompletedToday) {
-					set(state => ({
-						streak: state.streak > 0 ? state.streak : 1,
-					}));
-				}
-				// 注意：不自动重置streak，只有在明确没有完成时才重置
-			},
-
 			handleTaskStart: (entryCost: number) => {
 				// 开始付费挑战，扣除入场积分
 				if (entryCost > 0) {
@@ -123,11 +96,6 @@ export const useUserStore = create<UserState>()(
 				// 完成任务获得积分和经验值（经验值等于积分值）
 				get().addPoints(points);
 				get().addExperience(points);
-
-				// 更新连续天数
-				setTimeout(() => {
-					get().updateStreak();
-				}, 100);
 			},
 
 			handleTaskFailure: (

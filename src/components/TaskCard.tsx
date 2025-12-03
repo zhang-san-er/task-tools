@@ -146,8 +146,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	const handleDelete = () => {
 		setConfirmDialog({
 			open: true,
-			title: '删除悬赏',
-			message: '确定要删除这个悬赏吗？',
+			title: '删除任务',
+			message: '确定要删除这个任务吗？',
 			onConfirm: () => {
 				deleteTask(task.id);
 				setConfirmDialog({ ...confirmDialog, open: false });
@@ -174,14 +174,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
 	return (
 		<div
-			className={`rounded-2xl p-4 mb-3 transition-all duration-300 card-shadow ${
+			className={`rounded-3xl p-5 mb-4 transition-all duration-300 card-shadow hover:shadow-lg ${
 				task.isCompleted
-					? 'bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200/50'
+					? 'bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200/60'
 					: isTaskExpired
-					? 'bg-gray-100/80 border-2 border-gray-300/50'
+					? 'bg-gray-100/90 border-2 border-gray-300/60'
 					: task.type === 'demon'
-					? 'bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200/50'
-					: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200/50'
+					? 'bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200/60'
+					: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200/60'
 			}`}>
 			<div className="flex justify-between items-start mb-3">
 				<div className="flex-1 min-w-0">
@@ -208,7 +208,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				<button
 					onClick={handleDelete}
 					className="text-gray-400 hover:text-red-500 transition-colors p-1 -mt-1 -mr-1"
-					aria-label="删除悬赏">
+					aria-label="删除任务">
 					<svg
 						className="w-5 h-5"
 						fill="none"
@@ -226,13 +226,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
 			<div className="flex items-start justify-between mt-4 pt-3 border-t border-gray-200/50 gap-3">
 				<div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
-					<div className="text-xs text-gray-500 font-medium">
-						{task.expiresAt ? (
+					{task.expiresAt && (
+						<div className="text-xs text-gray-500 font-medium">
 							<span>⏳ {formatDate(task.expiresAt)}</span>
-						) : (
-							<span>∞ 无期限</span>
-						)}
-					</div>
+						</div>
+					)}
 					{task.type === 'demon' &&
 						task.entryCost &&
 						task.entryCost > 0 && (
@@ -256,22 +254,34 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 						</span>
 					)}
 					<span className="text-sm font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
-						+{task.points} 悬赏积分
+						+{task.points} 积分
 					</span>
 				</div>
-				<div className="flex-shrink-0 flex gap-2">
+				<div className="flex-shrink-0 flex flex-col gap-2">
 					{!task.isClaimed ? (
 						<button
 							onClick={handleClaim}
-							className="px-5 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200 whitespace-nowrap">
+							className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200/50 whitespace-nowrap">
 							领取
 						</button>
 					) : (
-						<button
-							onClick={handleUnclaim}
-							className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap">
-							取消
-						</button>
+						<>
+							<button
+								onClick={handleUnclaim}
+								className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap">
+								取消
+							</button>
+							<button
+								onClick={handleToggle}
+								disabled={task.isCompleted}
+							className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
+								task.isCompleted
+									? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+									: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
+							}`}>
+								{task.isCompleted ? '已完成' : '完成'}
+							</button>
+						</>
 					)}
 				</div>
 			</div>

@@ -19,7 +19,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 	const [formData, setFormData] = useState<TaskFormData>({
 		name: '',
 		type: 'main',
-		points: 10,
+		points: 0,
 		entryCost: 0,
 		isRepeatable: true,
 		expiresAt: undefined,
@@ -30,7 +30,12 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 		e.preventDefault();
 
 		if (!formData.name.trim()) {
-			alert('请输入悬赏名称');
+			alert('请输入任务名称');
+			return;
+		}
+
+		if (!formData.points || formData.points < 1) {
+			alert('请输入有效的奖励积分（至少为1）');
 			return;
 		}
 
@@ -43,7 +48,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 		setFormData({
 			name: '',
 			type: 'main',
-			points: 10,
+			points: 0,
 			entryCost: 0,
 			isRepeatable: true,
 			expiresAt: undefined,
@@ -82,283 +87,304 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 				<form
 					onSubmit={handleSubmit}
 					onClick={e => e.stopPropagation()}
-					className="glass-effect rounded-2xl card-shadow-lg p-6 pb-6 border border-white/50 w-full max-w-md max-h-[70vh] overflow-y-auto">
-					<h3 className="text-lg font-black text-gray-800 mb-5 flex items-center justify-center gap-2 text-center">
-						<span>✨</span>
-						<span>发布新悬赏</span>
-					</h3>
+					className="glass-effect rounded-2xl card-shadow-lg border border-white/50 w-full max-w-md max-h-[80vh] flex flex-col">
+					{/* 固定标题 */}
+					<div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200/50">
+						<h3 className="text-lg font-black text-gray-800 flex items-center justify-center gap-2 text-center">
+							<span>✨</span>
+							<span>创建新任务</span>
+						</h3>
+					</div>
 
-					<div className="space-y-4">
-						<div>
-							<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
-								悬赏名称
-							</label>
-							<input
-								type="text"
-								value={formData.name}
-								onChange={e =>
-									setFormData({
-										...formData,
-										name: e.target.value,
-									})
-								}
-								className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-								placeholder="例如：早睡、喝水、锻炼..."
-								required
-							/>
-						</div>
-
-						<div>
-							<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
-								悬赏类型
-							</label>
-							<div className="grid grid-cols-2 gap-3">
-								<label
-									className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
-										formData.type === 'main'
-											? 'border-blue-400 bg-blue-50'
-											: 'border-gray-200 bg-white'
-									}`}>
-									<input
-										type="radio"
-										value="main"
-										checked={
-											formData.type === 'main'
-										}
-										onChange={e =>
-											setFormData({
-												...formData,
-												type: e.target
-													.value as TaskType,
-											})
-										}
-										className="sr-only"
-									/>
-									<div className="text-center">
-										<div className="text-2xl mb-1">
-											⭐
-										</div>
-										<div className="text-sm font-bold text-gray-700">
-											主线悬赏
-										</div>
-									</div>
-								</label>
-								<label
-									className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
-										formData.type === 'demon'
-											? 'border-red-400 bg-red-50'
-											: 'border-gray-200 bg-white'
-									}`}>
-									<input
-										type="radio"
-										value="demon"
-										checked={
-											formData.type === 'demon'
-										}
-										onChange={e =>
-											setFormData({
-												...formData,
-												type: e.target
-													.value as TaskType,
-											})
-										}
-										className="sr-only"
-									/>
-									<div className="text-center">
-										<div className="text-2xl mb-1">
-											⚔️
-										</div>
-										<div className="text-sm font-bold text-red-600">
-											付费挑战
-										</div>
-									</div>
-								</label>
-							</div>
-						</div>
-
-						<div>
-							<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
-								奖励积分
-							</label>
-							<input
-								type="number"
-								min="1"
-								max="1000"
-								value={formData.points}
-								onChange={e =>
-									setFormData({
-										...formData,
-										points:
-											parseInt(
-												e.target.value
-											) || 10,
-									})
-								}
-								className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-							/>
-							<p className="text-xs text-gray-500 mt-2 font-medium">
-								✨ 完成悬赏可获得此悬赏积分
-							</p>
-						</div>
-
-						{formData.type === 'demon' && (
+					{/* 可滚动内容区域 */}
+					<div className="flex-1 overflow-y-auto px-6 py-4">
+						<div className="space-y-4">
 							<div>
 								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
-									入场积分
+									任务名称
 								</label>
 								<input
-									type="number"
-									min="0"
-									max="10000"
-									value={formData.entryCost || 0}
+									type="text"
+									value={formData.name}
 									onChange={e =>
 										setFormData({
 											...formData,
-											entryCost:
-												parseInt(
-													e.target.value
-												) || 0,
+											name: e.target.value,
 										})
 									}
 									className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+									placeholder="例如：早睡、喝水、锻炼..."
+									required
+								/>
+							</div>
+
+							<div>
+								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+									任务类型
+								</label>
+								<div className="grid grid-cols-2 gap-3">
+									<label
+										className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
+											formData.type === 'main'
+												? 'border-blue-400 bg-blue-50'
+												: 'border-gray-200 bg-white'
+										}`}>
+										<input
+											type="radio"
+											value="main"
+											checked={
+												formData.type ===
+												'main'
+											}
+											onChange={e =>
+												setFormData({
+													...formData,
+													type: e.target
+														.value as TaskType,
+												})
+											}
+											className="sr-only"
+										/>
+										<div className="text-center">
+											<div className="text-2xl mb-1">
+												⭐
+											</div>
+											<div className="text-sm font-bold text-gray-700">
+												主线悬赏
+											</div>
+										</div>
+									</label>
+									<label
+										className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
+											formData.type === 'demon'
+												? 'border-red-400 bg-red-50'
+												: 'border-gray-200 bg-white'
+										}`}>
+										<input
+											type="radio"
+											value="demon"
+											checked={
+												formData.type ===
+												'demon'
+											}
+											onChange={e =>
+												setFormData({
+													...formData,
+													type: e.target
+														.value as TaskType,
+												})
+											}
+											className="sr-only"
+										/>
+										<div className="text-center">
+											<div className="text-2xl mb-1">
+												⚔️
+											</div>
+											<div className="text-sm font-bold text-red-600">
+												付费挑战
+											</div>
+										</div>
+									</label>
+								</div>
+							</div>
+
+							<div>
+								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+									奖励积分
+								</label>
+								<input
+									type="number"
+									min="1"
+									max="1000"
+									value={formData.points || ''}
+									onChange={e => {
+										const value = e.target.value;
+										setFormData({
+											...formData,
+											points:
+												value === ''
+													? 0
+													: parseInt(
+															value
+													  ) || 0,
+										});
+									}}
+									className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
 								/>
 								<p className="text-xs text-gray-500 mt-2 font-medium">
-									⚠️
-									付费挑战需要支付入场积分才能开始，失败时入场积分将被扣除
+									✨ 完成任务可获得此积分奖励
 								</p>
 							</div>
-						)}
 
-						<div>
-							<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
-								任务类型
-							</label>
-							<div className="grid grid-cols-2 gap-3 mb-4">
-								<label
-									className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
-										formData.isRepeatable !==
-										false
-											? 'border-purple-400 bg-purple-50'
-											: 'border-gray-200 bg-white'
-									}`}>
-									<input
-										type="radio"
-										name="taskPeriod"
-										checked={
-											formData.isRepeatable !==
-											false
-										}
-										onChange={() =>
-											setFormData({
-												...formData,
-												isRepeatable: true,
-											})
-										}
-										className="sr-only"
-									/>
-									<div className="text-center">
-										<div className="text-2xl mb-1">
-											🔄
-										</div>
-										<div className="text-sm font-bold text-gray-700">
-											周期任务
-										</div>
-										<div className="text-xs text-gray-500 mt-1">
-											可重复执行
-										</div>
-									</div>
-								</label>
-								<label
-									className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
-										formData.isRepeatable ===
-										false
-											? 'border-purple-400 bg-purple-50'
-											: 'border-gray-200 bg-white'
-									}`}>
-									<input
-										type="radio"
-										name="taskPeriod"
-										checked={
-											formData.isRepeatable ===
-											false
-										}
-										onChange={() =>
-											setFormData({
-												...formData,
-												isRepeatable: false,
-												expiresAt: undefined, // 非周期任务不设置截止时间
-											})
-										}
-										className="sr-only"
-									/>
-									<div className="text-center">
-										<div className="text-2xl mb-1">
-											✓
-										</div>
-										<div className="text-sm font-bold text-gray-700">
-											一次性任务
-										</div>
-										<div className="text-xs text-gray-500 mt-1">
-											完成后不再出现
-										</div>
-									</div>
-								</label>
-							</div>
-							{formData.isRepeatable !== false && (
+							{formData.type === 'demon' && (
 								<div>
-									<label className="flex items-center mb-2 cursor-pointer">
-										<input
-											type="checkbox"
-											checked={hasExpiry}
-											onChange={e => {
-												setHasExpiry(
-													e.target.checked
-												);
-												if (
-													!e.target.checked
-												) {
-													setFormData({
-														...formData,
-														expiresAt:
-															undefined,
-													});
-												}
-											}}
-											className="w-5 h-5 rounded border-2 border-gray-300 text-purple-500 focus:ring-2 focus:ring-purple-200"
-										/>
-										<span className="ml-2 text-sm font-semibold text-gray-700">
-											⏰
-											设置截止日期（仅周期任务）
-										</span>
+									<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+										入场积分
 									</label>
-									{hasExpiry && (
-										<input
-											type="date"
-											min={getMinDate()}
-											value={
-												formData.expiresAt
-													? formData.expiresAt
-															.toISOString()
-															.split(
-																'T'
-															)[0]
-													: ''
-											}
-											onChange={
-												handleDateChange
-											}
-											className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-										/>
-									)}
+									<input
+										type="number"
+										min="0"
+										max="10000"
+										value={
+											formData.entryCost || 0
+										}
+										onChange={e =>
+											setFormData({
+												...formData,
+												entryCost:
+													parseInt(
+														e.target.value
+													) || 0,
+											})
+										}
+										className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+									/>
+									<p className="text-xs text-gray-500 mt-2 font-medium">
+										⚠️
+										付费挑战需要支付入场积分才能开始，失败时入场积分将被扣除
+									</p>
 								</div>
 							)}
-						</div>
 
-						<div className="flex gap-3 pt-2 mb-4">
+							<div>
+								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+									任务类型
+								</label>
+								<div className="grid grid-cols-2 gap-3 mb-4">
+									<label
+										className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
+											formData.isRepeatable !==
+											false
+												? 'border-purple-400 bg-purple-50'
+												: 'border-gray-200 bg-white'
+										}`}>
+										<input
+											type="radio"
+											name="taskPeriod"
+											checked={
+												formData.isRepeatable !==
+												false
+											}
+											onChange={() =>
+												setFormData({
+													...formData,
+													isRepeatable:
+														true,
+												})
+											}
+											className="sr-only"
+										/>
+										<div className="text-center">
+											<div className="text-2xl mb-1">
+												🔄
+											</div>
+											<div className="text-sm font-bold text-gray-700">
+												周期任务
+											</div>
+											<div className="text-xs text-gray-500 mt-1">
+												可重复执行
+											</div>
+										</div>
+									</label>
+									<label
+										className={`relative cursor-pointer rounded-xl p-4 border-2 transition-all ${
+											formData.isRepeatable ===
+											false
+												? 'border-purple-400 bg-purple-50'
+												: 'border-gray-200 bg-white'
+										}`}>
+										<input
+											type="radio"
+											name="taskPeriod"
+											checked={
+												formData.isRepeatable ===
+												false
+											}
+											onChange={() =>
+												setFormData({
+													...formData,
+													isRepeatable:
+														false,
+													expiresAt:
+														undefined, // 非周期任务不设置截止时间
+												})
+											}
+											className="sr-only"
+										/>
+										<div className="text-center">
+											<div className="text-2xl mb-1">
+												✓
+											</div>
+											<div className="text-sm font-bold text-gray-700">
+												一次性任务
+											</div>
+											<div className="text-xs text-gray-500 mt-1">
+												完成后不再出现
+											</div>
+										</div>
+									</label>
+								</div>
+								{formData.isRepeatable !== false && (
+									<div>
+										<label className="flex items-center mb-2 cursor-pointer">
+											<input
+												type="checkbox"
+												checked={hasExpiry}
+												onChange={e => {
+													setHasExpiry(
+														e.target
+															.checked
+													);
+													if (
+														!e.target
+															.checked
+													) {
+														setFormData({
+															...formData,
+															expiresAt:
+																undefined,
+														});
+													}
+												}}
+												className="w-5 h-5 rounded border-2 border-gray-300 text-purple-500 focus:ring-2 focus:ring-purple-200"
+											/>
+											<span className="ml-2 text-sm font-semibold text-gray-700">
+												⏰
+												设置截止日期（仅周期任务）
+											</span>
+										</label>
+										{hasExpiry && (
+											<input
+												type="date"
+												min={getMinDate()}
+												value={
+													formData.expiresAt
+														? formData.expiresAt
+																.toISOString()
+																.split(
+																	'T'
+																)[0]
+														: ''
+												}
+												onChange={
+													handleDateChange
+												}
+												className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+											/>
+										)}
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+
+					{/* 固定按钮区域 */}
+					<div className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200/50">
+						<div className="flex gap-3">
 							<button
 								type="submit"
 								className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">
-								✨ 发布悬赏
+								✨ 创建任务
 							</button>
 							<button
 								type="button"
