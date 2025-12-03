@@ -5,15 +5,22 @@ import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
 
 export const TaskList: React.FC = () => {
-	const { tasks, getTasksByType } = useTaskStore();
-	const [filter, setFilter] = useState<'all' | TaskType>('all');
+	const { tasks, getTasksByType, getActiveTasks } = useTaskStore();
+	const [filter, setFilter] = useState<'all' | TaskType | 'active'>(
+		'all'
+	);
 	const [showForm, setShowForm] = useState(false);
 
-	const filteredTasks =
-		filter === 'all' ? tasks : getTasksByType(filter);
-
+	const activeTasks = getActiveTasks();
 	const mainTasks = getTasksByType('main');
 	const demonTasks = getTasksByType('demon');
+
+	const filteredTasks =
+		filter === 'all'
+			? tasks
+			: filter === 'active'
+			? activeTasks
+			: getTasksByType(filter);
 
 	return (
 		<div className="w-full">
@@ -41,6 +48,15 @@ export const TaskList: React.FC = () => {
 							: 'bg-white/80 text-gray-600 shadow-sm'
 					}`}>
 					全部 ({tasks.length})
+				</button>
+				<button
+					onClick={() => setFilter('active')}
+					className={`px-4 py-2 rounded-xl whitespace-nowrap font-semibold text-sm transition-all shadow-sm active:scale-95 ${
+						filter === 'active'
+							? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-orange-200'
+							: 'bg-white/80 text-gray-600 shadow-sm'
+					}`}>
+					⚡ 进行中 ({activeTasks.length})
 				</button>
 				<button
 					onClick={() => setFilter('main')}

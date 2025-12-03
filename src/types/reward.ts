@@ -5,6 +5,7 @@ export interface Reward {
 	cost: number;
 	icon: string;
 	category: 'virtual' | 'real';
+	isActive?: boolean; // 是否上架
 }
 
 export interface RewardRecord {

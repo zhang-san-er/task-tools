@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
 	exportData,
 	importData,
 	clearAllData,
 } from '../utils/storage';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export const DataManager: React.FC = () => {
+	const [confirmDialog, setConfirmDialog] = useState<{
+		open: boolean;
+		title: string;
+		message: string;
+		onConfirm: () => void;
+		confirmText?: string;
+		cancelText?: string;
+		confirmButtonClass?: string;
+	}>({
+		open: false,
+		title: '',
+		message: '',
+		onConfirm: () => {},
+	});
+
 	const handleExport = () => {
 		const data = exportData();
 		const blob = new Blob([data], { type: 'application/json' });
@@ -46,17 +62,38 @@ export const DataManager: React.FC = () => {
 	};
 
 	const handleClear = () => {
-		if (
-			confirm(
-				'⚠️ 警告：此操作将清除所有数据，且无法恢复！确定要继续吗？'
-			)
-		) {
-			if (confirm('请再次确认：真的要清除所有数据吗？')) {
-				clearAllData();
-				alert('数据已清除，页面将刷新。');
-				window.location.reload();
-			}
-		}
+		setConfirmDialog({
+			open: true,
+			title: '⚠️ 警告',
+			message:
+				'此操作将清除所有数据，且无法恢复！确定要继续吗？',
+			onConfirm: () => {
+				setConfirmDialog({
+					open: true,
+					title: '再次确认',
+					message: '请再次确认：真的要清除所有数据吗？',
+					onConfirm: () => {
+						clearAllData();
+						setConfirmDialog({
+							open: true,
+							title: '数据已清除',
+							message: '数据已清除，页面将刷新。',
+							onConfirm: () => {
+								window.location.reload();
+							},
+							confirmText: '知道了',
+							cancelText: '',
+						});
+					},
+					confirmText: '确认清除',
+					cancelText: '取消',
+					confirmButtonClass: 'bg-red-500 text-white',
+				});
+			},
+			confirmText: '继续',
+			cancelText: '取消',
+			confirmButtonClass: 'bg-red-500 text-white',
+		});
 	};
 
 	return (
@@ -141,6 +178,22 @@ export const DataManager: React.FC = () => {
 					</p>
 				</div>
 			</div>
+
+			<ConfirmDialog
+				open={confirmDialog.open}
+				title={confirmDialog.title}
+				message={confirmDialog.message}
+				onConfirm={confirmDialog.onConfirm}
+				onCancel={() =>
+					setConfirmDialog({
+						...confirmDialog,
+						open: false,
+					})
+				}
+				confirmText={confirmDialog.confirmText}
+				cancelText={confirmDialog.cancelText}
+				confirmButtonClass={confirmDialog.confirmButtonClass}
+			/>
 		</div>
 	);
 };

@@ -7,8 +7,7 @@ import { useTaskStore } from './taskStore';
 interface UserState extends User {
 	addPoints: (points: number) => void;
 	deductPoints: (points: number) => boolean;
-	deductHealth: (amount: number) => void;
-	restoreHealth: (amount: number) => void;
+	addExperience: (amount: number) => void;
 	updateStreak: () => void;
 	handleTaskStart: (entryCost: number) => boolean;
 	handleTaskCompletion: (
@@ -24,7 +23,7 @@ const INITIAL_USER: User = {
 	level: 1,
 	totalPoints: 0,
 	currentPoints: 0,
-	health: 100,
+	experience: 0,
 	streak: 0,
 };
 
@@ -36,7 +35,7 @@ export const useUserStore = create<UserState>()(
 			addPoints: (points: number) => {
 				set(state => {
 					const newTotalPoints = state.totalPoints + points;
-					const newLevel = calculateLevel(newTotalPoints);
+					const newLevel = calculateLevel(state.experience);
 					const newCurrentPoints =
 						newTotalPoints - (newLevel - 1) * 100;
 
@@ -57,7 +56,7 @@ export const useUserStore = create<UserState>()(
 				set(currentState => {
 					const newTotalPoints =
 						currentState.totalPoints - points;
-					const newLevel = calculateLevel(newTotalPoints);
+					const newLevel = calculateLevel(currentState.experience);
 					const newCurrentPoints =
 						newTotalPoints - (newLevel - 1) * 100;
 
@@ -71,16 +70,16 @@ export const useUserStore = create<UserState>()(
 				return true;
 			},
 
-			deductHealth: (amount: number) => {
-				set(state => ({
-					health: Math.max(0, state.health - amount),
-				}));
-			},
-
-			restoreHealth: (amount: number) => {
-				set(state => ({
-					health: Math.min(100, state.health + amount),
-				}));
+			addExperience: (amount: number) => {
+				set(state => {
+					const newExperience = state.experience + amount;
+					const newLevel = calculateLevel(newExperience);
+					
+					return {
+						experience: newExperience,
+						level: newLevel,
+					};
+				});
 			},
 
 			updateStreak: () => {
@@ -121,8 +120,9 @@ export const useUserStore = create<UserState>()(
 				_isDemon: boolean,
 				_entryCost?: number
 			) => {
-				// 完成任务获得积分
+				// 完成任务获得积分和经验值（经验值等于积分值）
 				get().addPoints(points);
+				get().addExperience(points);
 
 				// 更新连续天数
 				setTimeout(() => {
@@ -131,24 +131,24 @@ export const useUserStore = create<UserState>()(
 			},
 
 			handleTaskFailure: (
-				isDemon: boolean,
-				entryCost?: number
+				_isDemon: boolean,
+				_entryCost?: number
 			) => {
-				if (isDemon && entryCost && entryCost > 0) {
-					// 付费挑战失败扣除入场积分（如果还没扣除的话）
-					// 注意：这里entryCost已经在开始时扣除了，所以失败时不再扣除
-					// 但如果需要失败时额外扣除，可以在这里添加
-					get().deductHealth(15);
-				} else if (isDemon) {
-					get().deductHealth(15);
-				} else {
-					// 普通任务失败扣除少量生命值
-					get().deductHealth(5);
-				}
+				// 任务失败不再扣除经验值
 			},
 		}),
 		{
 			name: 'habit-game-user',
+			migrate: (persistedState: any) => {
+				// 迁移函数：将 health 迁移到 experience
+				if (persistedState) {
+					if (persistedState.health !== undefined && persistedState.experience === undefined) {
+						persistedState.experience = persistedState.health;
+					}
+					delete persistedState.health;
+				}
+				return persistedState;
+			},
 		}
 	)
 );

@@ -1,10 +1,10 @@
 import React from 'react';
 import { useUserStore } from '../stores/userStore';
 import { LevelProgress } from './LevelProgress';
-import { HealthBar } from './HealthBar';
+import { ExperienceBar } from './HealthBar';
 
 export const UserStats: React.FC = () => {
-	const { level, totalPoints, health, streak } = useUserStore();
+	const { level, totalPoints, experience, streak } = useUserStore();
 
 	return (
 		<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
@@ -21,11 +21,11 @@ export const UserStats: React.FC = () => {
 
 			<div className="space-y-4">
 				<LevelProgress
-					totalPoints={totalPoints}
+					experience={experience}
 					level={level}
 				/>
 
-				<HealthBar health={health} />
+				<ExperienceBar experience={experience} level={level} />
 
 				<div className="grid grid-cols-2 gap-3 pt-2">
 					<div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center border border-blue-200/50">

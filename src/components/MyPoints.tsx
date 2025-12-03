@@ -2,7 +2,11 @@ import React from 'react';
 import { useTaskRecordStore } from '../stores/taskRecordStore';
 import { useUserStore } from '../stores/userStore';
 
-export const MyPoints: React.FC = () => {
+interface MyPointsProps {
+	onNavigateToShop: () => void;
+}
+
+export const MyPoints: React.FC<MyPointsProps> = ({ onNavigateToShop }) => {
 	const { totalPoints } = useUserStore();
 	const { getRecords } = useTaskRecordStore();
 	const records = getRecords();
@@ -26,6 +30,19 @@ export const MyPoints: React.FC = () => {
 						我的积分
 					</div>
 				</div>
+			</div>
+
+			{/* 积分商城入口 */}
+			<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
+				<h3 className="text-lg font-black text-gray-800 mb-4">
+					🛍️ 积分商城
+				</h3>
+				<button
+					onClick={onNavigateToShop}
+					className="w-full rounded-xl p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/50 hover:border-purple-300/50 transition-all active:scale-95 flex flex-col items-center justify-center gap-3">
+					<div className="text-5xl">🛍️</div>
+					<div className="text-sm font-bold text-gray-700">点击进入积分商城</div>
+				</button>
 			</div>
 
 			<div className="glass-effect rounded-2xl card-shadow p-5 border border-white/50">
@@ -75,11 +92,16 @@ export const MyPoints: React.FC = () => {
 										</p>
 									</div>
 									<div className="text-right">
+										{record.cost && record.cost > 0 && (
+											<div className="text-sm font-bold text-red-600 mb-1">
+												-{record.cost}
+											</div>
+										)}
 										<div className="text-lg font-black text-orange-600">
 											+{record.points}
 										</div>
 										<div className="text-xs text-gray-500">
-											悬赏积分
+											{record.cost && record.cost > 0 ? '净收益' : '悬赏积分'}
 										</div>
 									</div>
 								</div>

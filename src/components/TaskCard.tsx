@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Task } from '../types/task';
 import { useTaskStore } from '../stores/taskStore';
 import { useUserStore } from '../stores/userStore';
 import { useTaskRecordStore } from '../stores/taskRecordStore';
 import { formatDate, isExpired } from '../utils/dateUtils';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface TaskCardProps {
 	task: Task;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-	const { toggleTaskCompletion, deleteTask, startTask } =
+	const { toggleTaskCompletion, deleteTask, startTask, cancelTask, claimTask, unclaimTask } =
 		useTaskStore();
 	const {
 		handleTaskStart,
@@ -18,6 +19,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		totalPoints,
 	} = useUserStore();
 	const { addRecord } = useTaskRecordStore();
+
+	const [confirmDialog, setConfirmDialog] = useState<{
+		open: boolean;
+		title: string;
+		message: string;
+		onConfirm: () => void;
+		confirmText?: string;
+		cancelText?: string;
+		confirmButtonClass?: string;
+	}>({
+		open: false,
+		title: '',
+		message: '',
+		onConfirm: () => {},
+	});
 
 	const isTaskExpired =
 		task.expiresAt &&
@@ -34,38 +50,81 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 			: 'bg-blue-500 text-white';
 	};
 
-	const handleToggle = () => {
-		if (!task.isCompleted) {
-			// 如果是付费挑战且未开始，需要先支付入场费
-			if (task.type === 'demon' && !task.isStarted) {
-				const entryCost = task.entryCost || 0;
-				if (entryCost > 0) {
-					if (totalPoints < entryCost) {
-						alert(
-							`积分不足！需要 ${entryCost} 积分入场，当前只有 ${totalPoints} 积分。`
-						);
-						return;
-					}
-
-					if (
-						!confirm(
-							`确定要支付 ${entryCost} 积分开始这个付费挑战吗？\n\n⚠️ 如果失败，入场积分将被扣除！`
-						)
-					) {
-						return;
-					}
-
-					// 支付入场费
-					if (handleTaskStart(entryCost)) {
-						startTask(task.id);
-					} else {
-						alert('积分不足，无法开始挑战！');
-						return;
-					}
-				}
+	const handleClaim = () => {
+		// 如果是付费任务且有入场费，需要先支付
+		if (task.type === 'demon' && task.entryCost && task.entryCost > 0) {
+			if (totalPoints < task.entryCost) {
+				setConfirmDialog({
+					open: true,
+					title: '积分不足',
+					message: `需要 ${task.entryCost} 积分入场，当前只有 ${totalPoints} 积分。`,
+					onConfirm: () => setConfirmDialog({ ...confirmDialog, open: false }),
+					confirmText: '知道了',
+					cancelText: '',
+				});
+				return;
 			}
 
-			// 完成悬赏
+			setConfirmDialog({
+				open: true,
+				title: '确认支付',
+				message: `确定要支付 ${task.entryCost} 积分领取这个付费挑战吗？\n\n⚠️ 如果失败，入场积分将被扣除！`,
+				onConfirm: () => {
+					if (handleTaskStart(task.entryCost!)) {
+						claimTask(task.id);
+						startTask(task.id); // 已支付，直接标记为已开始
+						setConfirmDialog({ ...confirmDialog, open: false });
+					} else {
+						setConfirmDialog({
+							open: true,
+							title: '支付失败',
+							message: '积分不足，无法领取挑战！',
+							onConfirm: () => setConfirmDialog({ ...confirmDialog, open: false }),
+							confirmText: '知道了',
+							cancelText: '',
+						});
+					}
+				},
+				confirmText: '确认支付',
+				cancelText: '取消',
+				confirmButtonClass: 'bg-gradient-to-r from-red-500 to-rose-600 text-white',
+			});
+		} else {
+			// 免费任务直接领取
+			claimTask(task.id);
+		}
+	};
+
+	const handleUnclaim = () => {
+		setConfirmDialog({
+			open: true,
+			title: '取消领取',
+			message: '确定要取消领取这个任务吗？',
+			onConfirm: () => {
+				unclaimTask(task.id);
+				setConfirmDialog({ ...confirmDialog, open: false });
+			},
+			confirmText: '确认',
+			cancelText: '取消',
+		});
+	};
+
+	const handleToggle = () => {
+		// 只有已领取的任务才能完成
+		if (!task.isClaimed) {
+			setConfirmDialog({
+				open: true,
+				title: '提示',
+				message: '请先领取任务！',
+				onConfirm: () => setConfirmDialog({ ...confirmDialog, open: false }),
+				confirmText: '知道了',
+				cancelText: '',
+			});
+			return;
+		}
+
+		if (!task.isCompleted) {
+			// 完成悬赏（付费任务领取时已支付，这里直接完成）
 			toggleTaskCompletion(task.id);
 			handleTaskCompletion(
 				task.id,
@@ -73,8 +132,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				task.type === 'demon',
 				task.entryCost
 			);
-			// 记录完成记录
-			addRecord(task.name, task.points, task.type);
+			// 记录完成记录，包含支出积分
+			addRecord(task.name, task.points, task.type, task.entryCost);
+			// 任务完成后自动取消领取
+			unclaimTask(task.id);
 		} else {
 			// 取消完成（不扣除生命值，只是取消完成状态）
 			toggleTaskCompletion(task.id);
@@ -83,9 +144,32 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	};
 
 	const handleDelete = () => {
-		if (confirm('确定要删除这个悬赏吗？')) {
-			deleteTask(task.id);
-		}
+		setConfirmDialog({
+			open: true,
+			title: '删除悬赏',
+			message: '确定要删除这个悬赏吗？',
+			onConfirm: () => {
+				deleteTask(task.id);
+				setConfirmDialog({ ...confirmDialog, open: false });
+			},
+			confirmText: '删除',
+			cancelText: '取消',
+			confirmButtonClass: 'bg-red-500 text-white',
+		});
+	};
+
+	const handleCancel = () => {
+		setConfirmDialog({
+			open: true,
+			title: '取消任务',
+			message: '确定要取消这个任务吗？取消后可以重新开始。',
+			onConfirm: () => {
+				cancelTask(task.id);
+				setConfirmDialog({ ...confirmDialog, open: false });
+			},
+			confirmText: '确认',
+			cancelText: '取消',
+		});
 	};
 
 	return (
@@ -140,15 +224,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				</button>
 			</div>
 
-			<div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200/50">
-				<div className="text-xs text-gray-500 font-medium">
-					{task.expiresAt ? (
-						<span>⏳ {formatDate(task.expiresAt)}</span>
-					) : (
-						<span>∞ 无期限</span>
-					)}
-				</div>
-				<div className="flex items-center gap-2 flex-wrap">
+			<div className="flex items-start justify-between mt-4 pt-3 border-t border-gray-200/50 gap-3">
+				<div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+					<div className="text-xs text-gray-500 font-medium">
+						{task.expiresAt ? (
+							<span>⏳ {formatDate(task.expiresAt)}</span>
+						) : (
+							<span>∞ 无期限</span>
+						)}
+					</div>
 					{task.type === 'demon' &&
 						task.entryCost &&
 						task.entryCost > 0 && (
@@ -166,44 +250,42 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 									: `入场 ${task.entryCost} 积分`}
 							</span>
 						)}
+					{task.isRepeatable && (
+						<span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-semibold">
+							🔄 可重复
+						</span>
+					)}
 					<span className="text-sm font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
 						+{task.points} 悬赏积分
 					</span>
-					<button
-						onClick={handleToggle}
-						disabled={
-							!!(
-								task.type === 'demon' &&
-								!task.isStarted &&
-								task.entryCost &&
-								task.entryCost > 0 &&
-								totalPoints < task.entryCost
-							)
-						}
-						className={`px-5 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 ${
-							task.isCompleted
-								? 'bg-gray-300 text-gray-600'
-								: task.type === 'demon' &&
-								  !task.isStarted &&
-								  task.entryCost &&
-								  task.entryCost > 0 &&
-								  totalPoints < task.entryCost
-								? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-								: task.type === 'demon'
-								? 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-red-200'
-								: 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-blue-200'
-						}`}>
-						{task.isCompleted
-							? '✓ 已完成'
-							: task.type === 'demon' &&
-							  !task.isStarted &&
-							  task.entryCost &&
-							  task.entryCost > 0
-							? '开始挑战'
-							: '完成'}
-					</button>
+				</div>
+				<div className="flex-shrink-0 flex gap-2">
+					{!task.isClaimed ? (
+						<button
+							onClick={handleClaim}
+							className="px-5 py-2 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200 whitespace-nowrap">
+							领取
+						</button>
+					) : (
+						<button
+							onClick={handleUnclaim}
+							className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap">
+							取消
+						</button>
+					)}
 				</div>
 			</div>
+
+			<ConfirmDialog
+				open={confirmDialog.open}
+				title={confirmDialog.title}
+				message={confirmDialog.message}
+				onConfirm={confirmDialog.onConfirm}
+				onCancel={() => setConfirmDialog({ ...confirmDialog, open: false })}
+				confirmText={confirmDialog.confirmText}
+				cancelText={confirmDialog.cancelText}
+				confirmButtonClass={confirmDialog.confirmButtonClass}
+			/>
 		</div>
 	);
 };

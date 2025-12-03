@@ -1,17 +1,17 @@
 import React from 'react';
-import { getLevelProgress } from '../utils/levelCalculator';
+import { getLevelProgress, getPointsForCurrentLevel, getPointsForNextLevel } from '../utils/levelCalculator';
 
 interface LevelProgressProps {
-  totalPoints: number;
+  experience: number;
   level: number;
 }
 
-export const LevelProgress: React.FC<LevelProgressProps> = ({ totalPoints, level }) => {
-  const progress = getLevelProgress(totalPoints);
-  const nextLevelPoints = level * 100;
-  const currentLevelPoints = (level - 1) * 100;
-  const progressPoints = totalPoints - currentLevelPoints;
-  const neededPoints = nextLevelPoints - currentLevelPoints;
+export const LevelProgress: React.FC<LevelProgressProps> = ({ experience, level }) => {
+  const progress = getLevelProgress(experience, level);
+  const currentLevelExp = getPointsForCurrentLevel(level);
+  const nextLevelExp = getPointsForNextLevel(level);
+  const progressPoints = experience - currentLevelExp;
+  const neededPoints = nextLevelExp - currentLevelExp;
 
   return (
     <div className="w-full">

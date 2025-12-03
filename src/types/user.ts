@@ -2,7 +2,7 @@ export interface User {
   level: number;
   totalPoints: number;
   currentPoints: number;
-  health: number;
+  experience: number;
   streak: number;
 }
 

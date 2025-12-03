@@ -7,7 +7,8 @@ interface TaskRecordState {
 	addRecord: (
 		taskName: string,
 		points: number,
-		taskType: 'main' | 'demon'
+		taskType: 'main' | 'demon',
+		cost?: number
 	) => void;
 	getRecords: () => TaskRecord[];
 	getRecordsByDate: (date: Date) => TaskRecord[];
@@ -21,12 +22,14 @@ export const useTaskRecordStore = create<TaskRecordState>()(
 			addRecord: (
 				taskName: string,
 				points: number,
-				taskType: 'main' | 'demon'
+				taskType: 'main' | 'demon',
+				cost?: number
 			) => {
 				const record: TaskRecord = {
 					id: crypto.randomUUID(),
 					taskName,
 					points,
+					cost,
 					completedAt: new Date(),
 					taskType,
 				};

@@ -6,6 +6,9 @@ interface RewardState {
 	rewards: Reward[];
 	redeemedRewards: RewardRecord[];
 	addReward: (reward: Reward) => void;
+	updateReward: (rewardId: string, reward: Partial<Reward>) => void;
+	deleteReward: (rewardId: string) => void;
+	toggleRewardStatus: (rewardId: string) => void; // 切换商品上架/下架状态
 	redeemReward: (rewardId: string) => boolean;
 	getRedeemedRewards: () => RewardRecord[];
 }
@@ -18,6 +21,7 @@ const defaultRewards: Reward[] = [
 		cost: 50,
 		icon: '🏖️',
 		category: 'virtual',
+		isActive: true,
 	},
 	{
 		id: '2',
@@ -26,6 +30,7 @@ const defaultRewards: Reward[] = [
 		cost: 100,
 		icon: '☕',
 		category: 'real',
+		isActive: true,
 	},
 	{
 		id: '3',
@@ -34,6 +39,7 @@ const defaultRewards: Reward[] = [
 		cost: 200,
 		icon: '🎬',
 		category: 'real',
+		isActive: true,
 	},
 	{
 		id: '4',
@@ -42,6 +48,7 @@ const defaultRewards: Reward[] = [
 		cost: 300,
 		icon: '🍽️',
 		category: 'real',
+		isActive: true,
 	},
 	{
 		id: '5',
@@ -50,6 +57,7 @@ const defaultRewards: Reward[] = [
 		cost: 500,
 		icon: '🛍️',
 		category: 'real',
+		isActive: true,
 	},
 	{
 		id: '6',
@@ -58,6 +66,7 @@ const defaultRewards: Reward[] = [
 		cost: 1000,
 		icon: '🏆',
 		category: 'virtual',
+		isActive: true,
 	},
 ];
 
@@ -69,7 +78,36 @@ export const useRewardStore = create<RewardState>()(
 
 			addReward: (reward: Reward) => {
 				set(state => ({
-					rewards: [...state.rewards, reward],
+					rewards: [...state.rewards, { ...reward, isActive: reward.isActive !== undefined ? reward.isActive : true }],
+				}));
+			},
+
+			updateReward: (rewardId: string, updatedReward: Partial<Reward>) => {
+				set(state => ({
+					rewards: state.rewards.map(reward =>
+						reward.id === rewardId
+							? { ...reward, ...updatedReward }
+							: reward
+					),
+				}));
+			},
+
+			deleteReward: (rewardId: string) => {
+				set(state => ({
+					rewards: state.rewards.filter(reward => reward.id !== rewardId),
+				}));
+			},
+
+			toggleRewardStatus: (rewardId: string) => {
+				set(state => ({
+					rewards: state.rewards.map(reward => {
+						if (reward.id === rewardId) {
+							// 如果当前是 false，切换为 true；否则切换为 false
+							const currentStatus = reward.isActive !== false;
+							return { ...reward, isActive: !currentStatus };
+						}
+						return reward;
+					}),
 				}));
 			},
 

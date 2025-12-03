@@ -11,45 +11,13 @@ type Page = 'home' | 'points' | 'shop' | 'settings';
 
 const App: React.FC = () => {
 	const [currentPage, setCurrentPage] = useState<Page>('home');
-	const { health } = useUserStore();
 	const { getExpiredTasks } = useTaskStore();
 
 	useEffect(() => {
-		// 检查过期悬赏并扣除生命值（仅在组件挂载时执行一次）
-		const expiredTasks = getExpiredTasks();
-		if (expiredTasks.length > 0) {
-			expiredTasks.forEach(task => {
-				if (task.type === 'demon') {
-					// 如果付费挑战已开始（已支付入场费）且过期，入场积分已被扣除（失败）
-					if (
-						task.isStarted &&
-						task.entryCost &&
-						task.entryCost > 0
-					) {
-						// 入场积分在开始时已扣除，失败时不退还
-						useUserStore.getState().deductHealth(20);
-					} else {
-						useUserStore.getState().deductHealth(20);
-					}
-				} else {
-					useUserStore.getState().deductHealth(5);
-				}
-			});
-		}
-
 		// 更新连续天数
 		useUserStore.getState().updateStreak();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-
-	useEffect(() => {
-		// 生命值归零提示
-		if (health <= 0) {
-			alert(
-				'💔 警告：你的生命能量已耗尽！\n\n请尽快完成悬赏恢复生命值，否则将无法继续冒险！'
-			);
-		}
-	}, [health]);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
@@ -77,7 +45,13 @@ const App: React.FC = () => {
 							<TaskList />
 						</>
 					)}
-					{currentPage === 'points' && <MyPoints />}
+					{currentPage === 'points' && (
+						<MyPoints
+							onNavigateToShop={() =>
+								setCurrentPage('shop')
+							}
+						/>
+					)}
 					{currentPage === 'shop' && <RewardShop />}
 					{currentPage === 'settings' && <DataManager />}
 				</div>
@@ -88,7 +62,7 @@ const App: React.FC = () => {
 
 				{/* 底部导航 */}
 				<div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-lg z-50">
-					<div className="grid grid-cols-4 h-16">
+					<div className="grid grid-cols-3 h-16">
 						<button
 							onClick={() => setCurrentPage('home')}
 							className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -133,29 +107,6 @@ const App: React.FC = () => {
 							</svg>
 							<span className="text-xs font-semibold">
 								我的积分
-							</span>
-						</button>
-						<button
-							onClick={() => setCurrentPage('shop')}
-							className={`flex flex-col items-center justify-center gap-1 transition-colors ${
-								currentPage === 'shop'
-									? 'text-purple-600'
-									: 'text-gray-400'
-							}`}>
-							<svg
-								className="w-6 h-6"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24">
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-								/>
-							</svg>
-							<span className="text-xs font-semibold">
-								积分商城
 							</span>
 						</button>
 						<button

@@ -8,6 +8,8 @@ export interface Task {
 	points: number;
 	entryCost?: number; // 入场积分（仅付费挑战）
 	isStarted?: boolean; // 是否已开始（已支付入场费）
+	isClaimed?: boolean; // 是否已领取
+	isRepeatable?: boolean; // 是否可重复执行
 	createdAt: Date;
 	completedAt?: Date;
 	expiresAt?: Date;
@@ -18,5 +20,6 @@ export interface TaskFormData {
 	type: TaskType;
 	points: number;
 	entryCost?: number; // 入场积分（仅付费挑战）
+	isRepeatable?: boolean; // 是否可重复执行
 	expiresAt?: Date;
 }

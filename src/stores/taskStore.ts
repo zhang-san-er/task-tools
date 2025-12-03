@@ -8,8 +8,13 @@ interface TaskState {
   addTask: (taskData: TaskFormData) => void;
   toggleTaskCompletion: (id: string) => void;
   startTask: (id: string) => void; // 开始任务（支付入场费）
+  cancelTask: (id: string) => void; // 取消任务（重置 isStarted）
+  resetTask: (id: string) => void; // 重置任务（清除完成状态）
+  claimTask: (id: string) => void; // 领取任务
+  unclaimTask: (id: string) => void; // 取消领取任务
   deleteTask: (id: string) => void;
   getTasksByType: (type: TaskType) => Task[];
+  getActiveTasks: () => Task[]; // 获取正在执行的任务（已领取但未完成）
   getExpiredTasks: () => Task[];
   getTodayTasks: () => Task[];
 }
@@ -28,6 +33,8 @@ export const useTaskStore = create<TaskState>()(
           points: taskData.points,
           entryCost: taskData.type === 'demon' ? (taskData.entryCost || 0) : undefined,
           isStarted: false,
+          isClaimed: false,
+          isRepeatable: taskData.isRepeatable !== undefined ? taskData.isRepeatable : true,
           createdAt: new Date(),
           expiresAt: taskData.expiresAt,
         };
@@ -49,19 +56,100 @@ export const useTaskStore = create<TaskState>()(
           ),
         }));
       },
-      
-      toggleTaskCompletion: (id: string) => {
+
+      cancelTask: (id: string) => {
         set((state) => ({
           tasks: state.tasks.map((task) =>
             task.id === id
               ? {
                   ...task,
-                  isCompleted: !task.isCompleted,
-                  completedAt: task.isCompleted ? undefined : new Date(),
+                  isStarted: false,
                 }
               : task
           ),
         }));
+      },
+
+      resetTask: (id: string) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  isCompleted: false,
+                  completedAt: undefined,
+                  isStarted: false,
+                }
+              : task
+          ),
+        }));
+      },
+
+      claimTask: (id: string) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  isClaimed: true,
+                }
+              : task
+          ),
+        }));
+      },
+
+      unclaimTask: (id: string) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  isClaimed: false,
+                  isCompleted: false,
+                  completedAt: undefined,
+                  isStarted: false,
+                }
+              : task
+          ),
+        }));
+      },
+      
+      toggleTaskCompletion: (id: string) => {
+        set((state) => {
+          const task = state.tasks.find(t => t.id === id);
+          if (!task) return state;
+
+          const newIsCompleted = !task.isCompleted;
+          
+          // 如果任务完成且可重复，立即重置
+          if (newIsCompleted && task.isRepeatable) {
+            return {
+              tasks: state.tasks.map((t) =>
+                t.id === id
+                  ? {
+                      ...t,
+                      isCompleted: false,
+                      completedAt: undefined,
+                      isStarted: false,
+                    }
+                  : t
+              ),
+            };
+          }
+
+          // 否则正常切换完成状态
+          return {
+            tasks: state.tasks.map((t) =>
+              t.id === id
+                ? {
+                    ...t,
+                    isCompleted: newIsCompleted,
+                    completedAt: newIsCompleted ? new Date() : undefined,
+                  }
+                : t
+            ),
+          };
+        });
       },
       
       deleteTask: (id: string) => {
@@ -80,6 +168,12 @@ export const useTaskStore = create<TaskState>()(
         );
       },
       
+      getActiveTasks: () => {
+        return get().tasks.filter((task) => 
+          task.isClaimed === true && task.isCompleted === false
+        );
+      },
+
       getTodayTasks: () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -93,6 +187,17 @@ export const useTaskStore = create<TaskState>()(
     }),
     {
       name: 'habit-game-tasks',
+      migrate: (persistedState: any) => {
+        // 迁移函数：确保所有任务都有 isRepeatable 和 isClaimed 字段
+        if (persistedState && persistedState.tasks) {
+          persistedState.tasks = persistedState.tasks.map((task: Task) => ({
+            ...task,
+            isRepeatable: task.isRepeatable !== undefined ? task.isRepeatable : true,
+            isClaimed: task.isClaimed !== undefined ? task.isClaimed : false,
+          }));
+        }
+        return persistedState;
+      },
     }
   )
 );
