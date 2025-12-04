@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTaskStore } from '../stores/taskStore';
-import type { TaskFormData, TaskType } from '../types/task';
+import type { Task, TaskFormData, TaskType } from '../types/task';
 import { getTomorrowStart } from '../utils/dateUtils';
 
 interface TaskFormProps {
 	onClose: () => void;
+	task?: Task; // 编辑模式时传入任务数据
 }
 
-export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
+export const TaskForm: React.FC<TaskFormProps> = ({
+	onClose,
+	task,
+}) => {
 	// 阻止背景滚动
 	useEffect(() => {
 		document.body.style.overflow = 'hidden';
@@ -15,16 +19,32 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 			document.body.style.overflow = 'unset';
 		};
 	}, []);
-	const { addTask } = useTaskStore();
+	const { addTask, updateTask } = useTaskStore();
+	const isEditMode = !!task;
 	const [formData, setFormData] = useState<TaskFormData>({
-		name: '',
-		type: 'main',
-		points: 0,
-		entryCost: 0,
-		isRepeatable: true,
-		expiresAt: undefined,
+		name: task?.name || '',
+		type: task?.type || 'main',
+		points: task?.points || 0,
+		entryCost: task?.entryCost || 0,
+		isRepeatable:
+			task?.isRepeatable !== undefined
+				? task.isRepeatable
+				: true,
+		expiresAt: task?.expiresAt,
+		durationDays: task?.durationDays,
 	});
-	const [hasExpiry, setHasExpiry] = useState(false);
+	const [timeLimitType, setTimeLimitType] = useState<
+		'none' | 'expiresAt' | 'durationDays'
+	>(
+		task?.expiresAt
+			? 'expiresAt'
+			: task?.durationDays
+			? 'durationDays'
+			: 'none'
+	);
+	const [durationDaysInput, setDurationDaysInput] = useState(
+		task?.durationDays?.toString() || ''
+	);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -39,10 +59,23 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 			return;
 		}
 
-		addTask({
+		const submitData: TaskFormData = {
 			...formData,
-			expiresAt: hasExpiry ? formData.expiresAt : undefined,
-		});
+			expiresAt:
+				timeLimitType === 'expiresAt'
+					? formData.expiresAt
+					: undefined,
+			durationDays:
+				timeLimitType === 'durationDays'
+					? formData.durationDays
+					: undefined,
+		};
+
+		if (isEditMode && task) {
+			updateTask(task.id, submitData);
+		} else {
+			addTask(submitData);
+		}
 
 		// 重置表单
 		setFormData({
@@ -52,8 +85,10 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 			entryCost: 0,
 			isRepeatable: true,
 			expiresAt: undefined,
+			durationDays: undefined,
 		});
-		setHasExpiry(false);
+		setTimeLimitType('none');
+		setDurationDaysInput('');
 		onClose();
 	};
 
@@ -92,7 +127,11 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 					<div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200/50">
 						<h3 className="text-lg font-black text-gray-800 flex items-center justify-center gap-2 text-center">
 							<span>✨</span>
-							<span>创建新任务</span>
+							<span>
+								{isEditMode
+									? '编辑任务'
+									: '创建新任务'}
+							</span>
 						</h3>
 					</div>
 
@@ -326,52 +365,152 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 								</div>
 								{formData.isRepeatable !== false && (
 									<div>
-										<label className="flex items-center mb-2 cursor-pointer">
-											<input
-												type="checkbox"
-												checked={hasExpiry}
-												onChange={e => {
-													setHasExpiry(
-														e.target
-															.checked
-													);
-													if (
-														!e.target
-															.checked
-													) {
+										<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+											时间限制（可选）
+										</label>
+										<div className="space-y-3">
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="radio"
+													name="timeLimit"
+													checked={
+														timeLimitType ===
+														'none'
+													}
+													onChange={() => {
+														setTimeLimitType(
+															'none'
+														);
+														setFormData({
+															...formData,
+															expiresAt:
+																undefined,
+															durationDays:
+																undefined,
+														});
+														setDurationDaysInput(
+															''
+														);
+													}}
+													className="w-5 h-5 border-2 border-gray-300 text-purple-500 focus:ring-2 focus:ring-purple-200"
+												/>
+												<span className="ml-2 text-sm font-semibold text-gray-700">
+													无时间限制
+												</span>
+											</label>
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="radio"
+													name="timeLimit"
+													checked={
+														timeLimitType ===
+														'expiresAt'
+													}
+													onChange={() => {
+														setTimeLimitType(
+															'expiresAt'
+														);
+														setFormData({
+															...formData,
+															durationDays:
+																undefined,
+														});
+														setDurationDaysInput(
+															''
+														);
+													}}
+													className="w-5 h-5 border-2 border-gray-300 text-purple-500 focus:ring-2 focus:ring-purple-200"
+												/>
+												<span className="ml-2 text-sm font-semibold text-gray-700">
+													⏰ 设置截止日期
+												</span>
+											</label>
+											{timeLimitType ===
+												'expiresAt' && (
+												<input
+													type="date"
+													min={getMinDate()}
+													value={
+														formData.expiresAt
+															? formData.expiresAt
+																	.toISOString()
+																	.split(
+																		'T'
+																	)[0]
+															: ''
+													}
+													onChange={
+														handleDateChange
+													}
+													className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all ml-7"
+												/>
+											)}
+											<label className="flex items-center cursor-pointer">
+												<input
+													type="radio"
+													name="timeLimit"
+													checked={
+														timeLimitType ===
+														'durationDays'
+													}
+													onChange={() => {
+														setTimeLimitType(
+															'durationDays'
+														);
 														setFormData({
 															...formData,
 															expiresAt:
 																undefined,
 														});
-													}
-												}}
-												className="w-5 h-5 rounded border-2 border-gray-300 text-purple-500 focus:ring-2 focus:ring-purple-200"
-											/>
-											<span className="ml-2 text-sm font-semibold text-gray-700">
-												⏰
-												设置截止日期（仅周期任务）
-											</span>
-										</label>
-										{hasExpiry && (
-											<input
-												type="date"
-												min={getMinDate()}
-												value={
-													formData.expiresAt
-														? formData.expiresAt
-																.toISOString()
-																.split(
-																	'T'
-																)[0]
-														: ''
-												}
-												onChange={
-													handleDateChange
-												}
-												className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-											/>
-										)}
+													}}
+													className="w-5 h-5 border-2 border-gray-300 text-purple-500 focus:ring-2 focus:ring-purple-200"
+												/>
+												<span className="ml-2 text-sm font-semibold text-gray-700">
+													📅
+													设置持续天数（从领取时开始计算）
+												</span>
+											</label>
+											{timeLimitType ===
+												'durationDays' && (
+												<div className="ml-7">
+													<input
+														type="number"
+														min="1"
+														max="365"
+														value={
+															durationDaysInput
+														}
+														onChange={e => {
+															const value =
+																e
+																	.target
+																	.value;
+															setDurationDaysInput(
+																value
+															);
+															const days =
+																parseInt(
+																	value
+																) ||
+																undefined;
+															setFormData(
+																{
+																	...formData,
+																	durationDays:
+																		days,
+																}
+															);
+														}}
+														className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+														placeholder="请输入天数"
+													/>
+													<p className="text-xs text-gray-500 mt-2 font-medium">
+														📅
+														任务被领取后，将从领取时开始计算截止日期
+													</p>
+												</div>
+											)}
+										</div>
 									</div>
 								)}
 							</div>
@@ -384,7 +523,9 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose }) => {
 							<button
 								type="submit"
 								className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">
-								✨ 创建任务
+								{isEditMode
+									? '✨ 保存修改'
+									: '✨ 创建任务'}
 							</button>
 							<button
 								type="button"

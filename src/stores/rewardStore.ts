@@ -10,6 +10,7 @@ interface RewardState {
 	deleteReward: (rewardId: string) => void;
 	toggleRewardStatus: (rewardId: string) => void; // 切换商品上架/下架状态
 	redeemReward: (rewardId: string) => boolean;
+	addManualRedeemRecord: (cost: number, description: string) => void;
 	getRedeemedRewards: () => RewardRecord[];
 }
 
@@ -133,6 +134,23 @@ export const useRewardStore = create<RewardState>()(
 				}));
 
 				return true;
+			},
+
+			addManualRedeemRecord: (cost: number, description: string) => {
+				const record: RewardRecord = {
+					id: crypto.randomUUID(),
+					rewardId: '', // 手动兑换记录没有rewardId
+					rewardName: description,
+					cost: cost,
+					redeemedAt: new Date(),
+				};
+
+				set(state => ({
+					redeemedRewards: [
+						record,
+						...state.redeemedRewards, // 最新的在前面
+					],
+				}));
 			},
 
 			getRedeemedRewards: () => {

@@ -86,6 +86,8 @@ task-tools/
 - `habit-game-rewards` - 奖励数据
 - `habit-game-task-records` - 任务记录
 
+**重要：** 关于数据管理架构和入口级别的数据隔离原则，请参考 [数据管理架构文档](./DATA_ARCHITECTURE.md)。
+
 ## 组件说明
 
 ### 核心组件

@@ -3,8 +3,9 @@ import type { Task } from '../types/task';
 import { useTaskStore } from '../stores/taskStore';
 import { useUserStore } from '../stores/userStore';
 import { useTaskRecordStore } from '../stores/taskRecordStore';
-import { formatDate, isExpired } from '../utils/dateUtils';
+import { formatDate, isExpired, getDaysRemaining } from '../utils/dateUtils';
 import { ConfirmDialog } from './ConfirmDialog';
+import { TaskForm } from './TaskForm';
 
 interface TaskCardProps {
 	task: Task;
@@ -20,6 +21,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	} = useUserStore();
 	const { addRecord } = useTaskRecordStore();
 
+	const [isEditing, setIsEditing] = useState(false);
 	const [confirmDialog, setConfirmDialog] = useState<{
 		open: boolean;
 		title: string;
@@ -109,9 +111,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		});
 	};
 
+	const hasTimeLimit = !!(task.expiresAt || task.durationDays);
+
 	const handleToggle = () => {
-		// 只有已领取的任务才能完成
-		if (!task.isClaimed) {
+		// 如果有时间限制（截止日期或持续天数），需要先领取
+		if (hasTimeLimit && !task.isClaimed) {
 			setConfirmDialog({
 				open: true,
 				title: '提示',
@@ -123,6 +127,49 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 			return;
 		}
 
+		// 付费任务需要先领取
+		if (task.type === 'demon' && !task.isClaimed) {
+			setConfirmDialog({
+				open: true,
+				title: '提示',
+				message: '请先领取任务！',
+				onConfirm: () => setConfirmDialog({ ...confirmDialog, open: false }),
+				confirmText: '知道了',
+				cancelText: '',
+			});
+			return;
+		}
+
+		// 非付费任务且没有时间限制，直接完成，需要确认
+		if (task.type === 'main' && !hasTimeLimit) {
+			if (!task.isCompleted) {
+				setConfirmDialog({
+					open: true,
+					title: '确认完成',
+					message: `确定要完成「${task.name}」吗？\n\n完成后将获得 ${task.points} 积分。`,
+					onConfirm: () => {
+						toggleTaskCompletion(task.id);
+						handleTaskCompletion(
+							task.id,
+							task.points,
+							false,
+							undefined
+						);
+						addRecord(task.name, task.points, task.type, undefined);
+						setConfirmDialog({ ...confirmDialog, open: false });
+					},
+					confirmText: '确认完成',
+					cancelText: '取消',
+					confirmButtonClass: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+				});
+			} else {
+				// 取消完成（不扣除积分，只是取消完成状态）
+				toggleTaskCompletion(task.id);
+			}
+			return;
+		}
+
+		// 有时间限制或付费任务，需要先领取才能完成
 		if (!task.isCompleted) {
 			// 完成悬赏（付费任务领取时已支付，这里直接完成）
 			toggleTaskCompletion(task.id);
@@ -158,17 +205,36 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		});
 	};
 
+	const handleCardClick = (e: React.MouseEvent) => {
+		// 如果点击的是按钮或删除图标，不触发编辑
+		if (
+			(e.target as HTMLElement).closest('button') ||
+			(e.target as HTMLElement).closest('svg')
+		) {
+			return;
+		}
+		setIsEditing(true);
+	};
+
 	return (
-		<div
-			className={`rounded-3xl p-5 mb-4 transition-all duration-300 card-shadow hover:shadow-lg ${
-				task.isCompleted
-					? 'bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200/60'
-					: isTaskExpired
-					? 'bg-gray-100/90 border-2 border-gray-300/60'
-					: task.type === 'demon'
-					? 'bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200/60'
-					: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200/60'
-			}`}>
+		<>
+			{isEditing && (
+				<TaskForm
+					task={task}
+					onClose={() => setIsEditing(false)}
+				/>
+			)}
+			<div
+				onClick={handleCardClick}
+				className={`rounded-3xl p-5 mb-4 transition-all duration-300 card-shadow hover:shadow-lg cursor-pointer ${
+					task.isCompleted
+						? 'bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200/60'
+						: isTaskExpired
+						? 'bg-gray-100/90 border-2 border-gray-300/60'
+						: task.type === 'demon'
+						? 'bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200/60'
+						: 'bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200/60'
+				}`}>
 			<div className="flex justify-between items-start mb-3">
 				<div className="flex-1 min-w-0">
 					<div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -214,7 +280,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				<div className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
 					{task.expiresAt && (
 						<div className="text-xs text-gray-500 font-medium">
-							<span>⏳ {formatDate(task.expiresAt)}</span>
+							{isTaskExpired ? (
+								<span className="text-gray-500">⏰ 已过期</span>
+							) : (
+								<span>
+									⏳ {formatDate(task.expiresAt)} 
+									<span className="ml-1 text-orange-600 font-bold">
+										(剩余 {getDaysRemaining(task.expiresAt)} 天)
+									</span>
+								</span>
+							)}
+						</div>
+					)}
+					{task.durationDays && !task.expiresAt && (
+						<div className="text-xs text-gray-500 font-medium">
+							<span className="text-blue-600 font-bold">
+								📅 持续 {task.durationDays} 天（领取后开始计算）
+							</span>
 						</div>
 					)}
 					{task.type === 'demon' &&
@@ -244,30 +326,45 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 					</span>
 				</div>
 				<div className="flex-shrink-0 flex flex-col gap-2">
-					{!task.isClaimed ? (
-						<button
-							onClick={handleClaim}
-							className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200/50 whitespace-nowrap">
-							领取
-						</button>
-					) : (
-						<>
+					{task.type === 'demon' || hasTimeLimit ? (
+						// 付费任务或有时间限制的任务：需要领取
+						!task.isClaimed ? (
 							<button
-								onClick={handleUnclaim}
-								className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap">
-								取消
+								onClick={handleClaim}
+								className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200/50 whitespace-nowrap">
+								领取
 							</button>
-							<button
-								onClick={handleToggle}
-								disabled={task.isCompleted}
+						) : (
+							<>
+								<button
+									onClick={handleUnclaim}
+									className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap">
+									取消
+								</button>
+								<button
+									onClick={handleToggle}
+									disabled={task.isCompleted}
+									className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
+										task.isCompleted
+											? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+											: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
+									}`}>
+									{task.isCompleted ? '已完成' : '完成'}
+								</button>
+							</>
+						)
+					) : (
+						// 非付费任务且没有时间限制：直接显示完成按钮
+						<button
+							onClick={handleToggle}
+							disabled={task.isCompleted}
 							className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
 								task.isCompleted
 									? 'bg-gray-200 text-gray-400 cursor-not-allowed'
 									: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
 							}`}>
-								{task.isCompleted ? '已完成' : '完成'}
-							</button>
-						</>
+							{task.isCompleted ? '已完成' : '完成'}
+						</button>
 					)}
 				</div>
 			</div>
@@ -282,6 +379,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				cancelText={confirmDialog.cancelText}
 				confirmButtonClass={confirmDialog.confirmButtonClass}
 			/>
-		</div>
+			</div>
+		</>
 	);
 };

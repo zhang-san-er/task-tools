@@ -6,6 +6,7 @@ import { isExpired } from '../utils/dateUtils';
 interface TaskState {
   tasks: Task[];
   addTask: (taskData: TaskFormData) => void;
+  updateTask: (id: string, taskData: TaskFormData) => void;
   toggleTaskCompletion: (id: string) => void;
   startTask: (id: string) => void; // 开始任务（支付入场费）
   cancelTask: (id: string) => void; // 取消任务（重置 isStarted）
@@ -37,10 +38,30 @@ export const useTaskStore = create<TaskState>()(
           isRepeatable: taskData.isRepeatable !== undefined ? taskData.isRepeatable : true,
           createdAt: new Date(),
           expiresAt: taskData.expiresAt,
+          durationDays: taskData.durationDays,
         };
         
         set((state) => ({
           tasks: [...state.tasks, newTask],
+        }));
+      },
+
+      updateTask: (id: string, taskData: TaskFormData) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  name: taskData.name,
+                  type: taskData.type,
+                  points: taskData.points,
+                  entryCost: taskData.type === 'demon' ? (taskData.entryCost || 0) : undefined,
+                  isRepeatable: taskData.isRepeatable !== undefined ? taskData.isRepeatable : true,
+                  expiresAt: taskData.expiresAt,
+                  durationDays: taskData.durationDays,
+                }
+              : task
+          ),
         }));
       },
       
@@ -86,16 +107,28 @@ export const useTaskStore = create<TaskState>()(
       },
 
       claimTask: (id: string) => {
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id
-              ? {
+        set((state) => {
+          return {
+            tasks: state.tasks.map((task) => {
+              if (task.id === id) {
+                // 如果有持续天数且还没有expiresAt，计算截止日期
+                let expiresAt = task.expiresAt;
+                if (task.durationDays && !expiresAt) {
+                  const claimDate = new Date();
+                  claimDate.setDate(claimDate.getDate() + task.durationDays);
+                  claimDate.setHours(23, 59, 59, 999);
+                  expiresAt = claimDate;
+                }
+                return {
                   ...task,
                   isClaimed: true,
-                }
-              : task
-          ),
-        }));
+                  expiresAt: expiresAt,
+                };
+              }
+              return task;
+            }),
+          };
+        });
       },
 
       unclaimTask: (id: string) => {
@@ -188,13 +221,28 @@ export const useTaskStore = create<TaskState>()(
     {
       name: 'habit-game-tasks',
       migrate: (persistedState: any) => {
-        // 迁移函数：确保所有任务都有 isRepeatable 和 isClaimed 字段
+        // 迁移函数：确保所有任务都有必需的字段，兼容历史数据
         if (persistedState && persistedState.tasks) {
-          persistedState.tasks = persistedState.tasks.map((task: Task) => ({
-            ...task,
-            isRepeatable: task.isRepeatable !== undefined ? task.isRepeatable : true,
-            isClaimed: task.isClaimed !== undefined ? task.isClaimed : false,
-          }));
+          persistedState.tasks = persistedState.tasks.map((task: any) => {
+            // 处理日期字段的序列化/反序列化
+            const processedTask: any = {
+              ...task,
+              createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
+              expiresAt: task.expiresAt ? new Date(task.expiresAt) : undefined,
+              completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+            };
+
+            // 确保所有必需字段都有默认值
+            return {
+              ...processedTask,
+              isRepeatable: processedTask.isRepeatable !== undefined ? processedTask.isRepeatable : true,
+              isClaimed: processedTask.isClaimed !== undefined ? processedTask.isClaimed : false,
+              isStarted: processedTask.isStarted !== undefined ? processedTask.isStarted : false,
+              isCompleted: processedTask.isCompleted !== undefined ? processedTask.isCompleted : false,
+              entryCost: processedTask.type === 'demon' ? (processedTask.entryCost || 0) : undefined,
+              durationDays: processedTask.durationDays !== undefined ? processedTask.durationDays : undefined,
+            };
+          });
         }
         return persistedState;
       },

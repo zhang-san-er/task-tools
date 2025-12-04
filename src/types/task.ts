@@ -13,6 +13,7 @@ export interface Task {
 	createdAt: Date;
 	completedAt?: Date;
 	expiresAt?: Date;
+	durationDays?: number; // 持续天数（从领取时开始计算）
 }
 
 export interface TaskFormData {
@@ -22,4 +23,5 @@ export interface TaskFormData {
 	entryCost?: number; // 入场积分（仅付费挑战）
 	isRepeatable?: boolean; // 是否可重复执行
 	expiresAt?: Date;
+	durationDays?: number; // 持续天数（与expiresAt互斥）
 }
