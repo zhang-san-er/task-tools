@@ -7,7 +7,7 @@ export default defineConfig({
 	plugins: [
 		react(),
 		VitePWA({
-			registerType: 'prompt', // 改为 prompt，确保用户控制更新
+			registerType: 'autoUpdate', // 自动更新模式
 			includeAssets: ['favicon.ico', 'icons/*.png'],
 			manifest: {
 				name: '任务平台',
