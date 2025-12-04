@@ -14,6 +14,7 @@ export interface Task {
 	completedAt?: Date;
 	expiresAt?: Date;
 	durationDays?: number; // 持续天数（从领取时开始计算）
+	dailyLimit?: number; // 一天可以完成的次数
 }
 
 export interface TaskFormData {
@@ -24,4 +25,5 @@ export interface TaskFormData {
 	isRepeatable?: boolean; // 是否可重复执行
 	expiresAt?: Date;
 	durationDays?: number; // 持续天数（与expiresAt互斥）
+	dailyLimit?: number; // 一天可以完成的次数
 }

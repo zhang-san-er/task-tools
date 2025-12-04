@@ -25,7 +25,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	} = useTaskStore();
 	const { handleTaskStart, handleTaskCompletion, totalPoints } =
 		useUserStore();
-	const { addRecord } = useTaskRecordStore();
+	const { addRecord, getRecordsByDate } = useTaskRecordStore();
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [refreshKey, setRefreshKey] = useState(0); // 用于强制刷新日期显示
@@ -70,6 +70,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		task.expiresAt &&
 		isExpired(task.expiresAt) &&
 		!task.isCompleted;
+
+	// 检查今日完成次数
+	const getTodayCompletedCount = () => {
+		const today = new Date();
+		const todayRecords = getRecordsByDate(today);
+		return todayRecords.filter(record => record.taskName === task.name).length;
+	};
+
+	const todayCompletedCount = getTodayCompletedCount();
+	const dailyLimit = task.dailyLimit !== undefined ? task.dailyLimit : 1;
+	const isDailyLimitReached = todayCompletedCount >= dailyLimit;
 
 	const getTaskTypeLabel = () => {
 		return task.type === 'demon' ? '⚡ 付费挑战' : '⭐ 主线悬赏';
@@ -159,6 +170,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	const hasTimeLimit = !!(task.expiresAt || task.durationDays);
 
 	const handleToggle = () => {
+		// 检查每日完成次数限制
+		if (isDailyLimitReached && !task.isCompleted) {
+			setConfirmDialog({
+				open: true,
+				title: '已达到每日完成次数限制',
+				message: `该任务今天已完成 ${todayCompletedCount}/${dailyLimit} 次，已达到每日完成次数限制。`,
+				onConfirm: () =>
+					setConfirmDialog({
+						...confirmDialog,
+						open: false,
+					}),
+				confirmText: '知道了',
+				cancelText: '',
+			});
+			return;
+		}
+
 		// 如果有时间限制（截止日期或持续天数），需要先领取
 		if (hasTimeLimit && !task.isClaimed) {
 			setConfirmDialog({
@@ -421,36 +449,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 								🔄 可重复
 							</span>
 						)}
+						{task.isRepeatable && dailyLimit > 1 && (
+							<span className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+								📊 每日 {dailyLimit} 次
+							</span>
+						)}
+						{isDailyLimitReached && (
+							<span className="text-xs px-2 py-1 rounded-lg bg-gray-200 text-gray-600 font-semibold">
+								今日已完成 {todayCompletedCount}/{dailyLimit} 次
+							</span>
+						)}
 						<span className="text-sm font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
 							+{task.points} 积分
 						</span>
 					</div>
-					<div className="flex-shrink-0 flex flex-col gap-2">
+					<div className="flex-shrink-0 flex flex-col gap-1.5">
 						{task.type === 'demon' || hasTimeLimit ? (
 							// 付费任务或有时间限制的任务：需要领取
 							!task.isClaimed ? (
 								<button
 									onClick={handleClaim}
-									className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200/50 whitespace-nowrap">
+									className="px-3 py-1.5 rounded-lg font-bold text-xs transition-all shadow-md hover:shadow-lg active:scale-95 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-200/50 whitespace-nowrap">
 									领取
 								</button>
 							) : (
 								<>
 									<button
 										onClick={handleUnclaim}
-										className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 whitespace-nowrap">
+										className="px-3 py-1.5 bg-gray-300 text-gray-700 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 whitespace-nowrap">
 										取消
 									</button>
 									<button
 										onClick={handleToggle}
-										disabled={task.isCompleted}
-										className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
-											task.isCompleted
+										disabled={task.isCompleted || isDailyLimitReached}
+										className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
+											task.isCompleted || isDailyLimitReached
 												? 'bg-gray-200 text-gray-400 cursor-not-allowed'
 												: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
-										}`}>
+										}`}
+										title={
+											isDailyLimitReached
+												? `今日已完成 ${todayCompletedCount}/${dailyLimit} 次`
+												: ''
+										}>
 										{task.isCompleted
 											? '已完成'
+											: isDailyLimitReached
+											? `已完成 ${todayCompletedCount}/${dailyLimit}`
 											: '完成'}
 									</button>
 								</>
@@ -459,13 +504,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 							// 非付费任务且没有时间限制：直接显示完成按钮
 							<button
 								onClick={handleToggle}
-								disabled={task.isCompleted}
-								className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
-									task.isCompleted
+								disabled={task.isCompleted || isDailyLimitReached}
+								className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
+									task.isCompleted || isDailyLimitReached
 										? 'bg-gray-200 text-gray-400 cursor-not-allowed'
 										: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
-								}`}>
-								{task.isCompleted ? '已完成' : '完成'}
+								}`}
+								title={
+									isDailyLimitReached
+										? `今日已完成 ${todayCompletedCount}/${dailyLimit} 次`
+										: ''
+								}>
+								{task.isCompleted
+									? '已完成'
+									: isDailyLimitReached
+									? `已完成 ${todayCompletedCount}/${dailyLimit}`
+									: '完成'}
 							</button>
 						)}
 					</div>

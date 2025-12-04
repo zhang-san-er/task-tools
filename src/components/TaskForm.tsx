@@ -38,6 +38,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 				: new Date(task.expiresAt)
 			: undefined,
 		durationDays: task?.durationDays,
+		dailyLimit:
+			task?.dailyLimit !== undefined ? task.dailyLimit : 1,
 	});
 	const [timeLimitType, setTimeLimitType] = useState<
 		'none' | 'expiresAt' | 'durationDays'
@@ -92,6 +94,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			isRepeatable: true,
 			expiresAt: undefined,
 			durationDays: undefined,
+			dailyLimit: 1,
 		});
 		setTimeLimitType('none');
 		setDurationDaysInput('');
@@ -531,6 +534,38 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 												</div>
 											)}
 										</div>
+									</div>
+								)}
+								{formData.isRepeatable !== false && (
+									<div>
+										<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+											每日完成次数限制
+										</label>
+										<input
+											type="number"
+											min="1"
+											max="100"
+											value={
+												formData.dailyLimit ||
+												1
+											}
+											onChange={e => {
+												const value =
+													parseInt(
+														e.target.value
+													) || 1;
+												setFormData({
+													...formData,
+													dailyLimit: value,
+												});
+											}}
+											className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+											placeholder="请输入次数"
+										/>
+										<p className="text-xs text-gray-500 mt-2 font-medium">
+											📊
+											设置该任务每天最多可以完成的次数，默认为1次
+										</p>
 									</div>
 								)}
 							</div>

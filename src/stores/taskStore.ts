@@ -39,6 +39,7 @@ export const useTaskStore = create<TaskState>()(
           createdAt: new Date(),
           expiresAt: taskData.expiresAt,
           durationDays: taskData.durationDays,
+          dailyLimit: taskData.dailyLimit !== undefined ? taskData.dailyLimit : 1,
         };
         
         set((state) => ({
@@ -59,6 +60,7 @@ export const useTaskStore = create<TaskState>()(
                   isRepeatable: taskData.isRepeatable !== undefined ? taskData.isRepeatable : true,
                   expiresAt: taskData.expiresAt,
                   durationDays: taskData.durationDays,
+                  dailyLimit: taskData.dailyLimit !== undefined ? taskData.dailyLimit : 1,
                 }
               : task
           ),
@@ -241,6 +243,7 @@ export const useTaskStore = create<TaskState>()(
               isCompleted: processedTask.isCompleted !== undefined ? processedTask.isCompleted : false,
               entryCost: processedTask.type === 'demon' ? (processedTask.entryCost || 0) : undefined,
               durationDays: processedTask.durationDays !== undefined ? processedTask.durationDays : undefined,
+              dailyLimit: processedTask.dailyLimit !== undefined ? processedTask.dailyLimit : 1,
             };
           });
         }
