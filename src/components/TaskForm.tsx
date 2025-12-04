@@ -39,7 +39,9 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			: undefined,
 		durationDays: task?.durationDays,
 		dailyLimit:
-			task?.dailyLimit !== undefined ? task.dailyLimit : 1,
+			task?.dailyLimit !== undefined
+				? task.dailyLimit
+				: undefined,
 	});
 	const [timeLimitType, setTimeLimitType] = useState<
 		'none' | 'expiresAt' | 'durationDays'
@@ -64,6 +66,16 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 
 		if (!formData.points || formData.points < 1) {
 			alert('请输入有效的奖励积分（至少为1）');
+			return;
+		}
+
+		// 校验每日完成次数限制（如果填写了，必须大于0）
+		if (
+			formData.dailyLimit !== undefined &&
+			formData.dailyLimit !== null &&
+			formData.dailyLimit < 1
+		) {
+			alert('每日完成次数限制必须大于0');
 			return;
 		}
 
@@ -94,7 +106,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			isRepeatable: true,
 			expiresAt: undefined,
 			durationDays: undefined,
-			dailyLimit: 1,
+			dailyLimit: undefined,
 		});
 		setTimeLimitType('none');
 		setDurationDaysInput('');
@@ -546,25 +558,31 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 											min="1"
 											max="100"
 											value={
-												formData.dailyLimit ||
-												1
+												formData.dailyLimit !==
+												undefined
+													? formData.dailyLimit
+													: ''
 											}
 											onChange={e => {
 												const value =
-													parseInt(
-														e.target.value
-													) || 1;
+													e.target.value;
 												setFormData({
 													...formData,
-													dailyLimit: value,
+													dailyLimit:
+														value === ''
+															? undefined
+															: parseInt(
+																	value
+															  ) ||
+															  undefined,
 												});
 											}}
 											className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
-											placeholder="请输入次数"
+											placeholder="请输入次数（可选，默认1次）"
 										/>
 										<p className="text-xs text-gray-500 mt-2 font-medium">
 											📊
-											设置该任务每天最多可以完成的次数，默认为1次
+											设置该任务每天最多可以完成的次数，留空则默认为1次
 										</p>
 									</div>
 								)}
