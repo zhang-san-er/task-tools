@@ -136,8 +136,55 @@ export const HomePage: React.FC = () => {
 		}
 	};
 
-	const handleRefresh = () => {
-		window.location.reload();
+	const handleRefresh = async () => {
+		try {
+			// 如果有 Service Worker，先处理更新
+			if ('serviceWorker' in navigator) {
+				const registration = await navigator.serviceWorker
+					.ready;
+
+				// 如果有等待中的新版本，先激活它
+				if (registration.waiting) {
+					// 发送 SKIP_WAITING 消息给等待中的 Service Worker
+					registration.waiting.postMessage({
+						type: 'SKIP_WAITING',
+					});
+
+					// 监听 controllerchange 事件，当新的 Service Worker 激活后刷新
+					let refreshing = false;
+					navigator.serviceWorker.addEventListener(
+						'controllerchange',
+						() => {
+							if (!refreshing) {
+								refreshing = true;
+								// 使用 location.href 赋值来强制刷新（比 reload 更可靠）
+								window.location.href =
+									window.location.href;
+							}
+						}
+					);
+
+					// 如果 1 秒内没有触发 controllerchange，直接刷新
+					setTimeout(() => {
+						if (!refreshing) {
+							window.location.href =
+								window.location.href;
+						}
+					}, 1000);
+
+					return;
+				}
+
+				// 强制更新 Service Worker
+				await registration.update();
+			}
+
+			// 使用 location.href 赋值来强制刷新（比 reload 更可靠）
+			window.location.href = window.location.href;
+		} catch (error) {
+			// 如果出错，直接刷新
+			window.location.href = window.location.href;
+		}
 	};
 
 	return (
