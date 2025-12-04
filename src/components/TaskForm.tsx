@@ -30,7 +30,13 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			task?.isRepeatable !== undefined
 				? task.isRepeatable
 				: true,
-		expiresAt: task?.expiresAt,
+		expiresAt: task?.expiresAt
+			? typeof task.expiresAt === 'string'
+				? new Date(task.expiresAt)
+				: task.expiresAt instanceof Date
+				? task.expiresAt
+				: new Date(task.expiresAt)
+			: undefined,
 		durationDays: task?.durationDays,
 	});
 	const [timeLimitType, setTimeLimitType] = useState<
@@ -217,7 +223,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 										/>
 										<div className="text-center">
 											<div className="text-2xl mb-1">
-												⚔️
+												⚡
 											</div>
 											<div className="text-sm font-bold text-red-600">
 												付费挑战
@@ -432,11 +438,25 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 													min={getMinDate()}
 													value={
 														formData.expiresAt
-															? formData.expiresAt
-																	.toISOString()
-																	.split(
-																		'T'
-																	)[0]
+															? (() => {
+																	const date =
+																		formData.expiresAt instanceof
+																		Date
+																			? formData.expiresAt
+																			: typeof formData.expiresAt ===
+																			  'string'
+																			? new Date(
+																					formData.expiresAt
+																			  )
+																			: new Date(
+																					formData.expiresAt
+																			  );
+																	return date
+																		.toISOString()
+																		.split(
+																			'T'
+																		)[0];
+															  })()
 															: ''
 													}
 													onChange={

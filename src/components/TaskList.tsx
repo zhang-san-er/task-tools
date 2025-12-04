@@ -74,7 +74,7 @@ export const TaskList: React.FC = () => {
 							? 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-red-200'
 							: 'bg-white/80 text-gray-600 shadow-sm'
 					}`}>
-					💰 付费挑战 ({demonTasks.length})
+					⚡ 付费挑战 ({demonTasks.length})
 				</button>
 			</div>
 

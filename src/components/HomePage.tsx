@@ -13,6 +13,14 @@ export const HomePage: React.FC = () => {
 			gradient: 'from-purple-500 to-pink-500',
 			bgGradient: 'from-purple-50 to-pink-50',
 		},
+		{
+			id: 'idea-notes',
+			title: '💭 想法记录',
+			description: '记录灵感想法，分类整理',
+			path: '/idea-notes',
+			gradient: 'from-blue-500 to-indigo-500',
+			bgGradient: 'from-blue-50 to-indigo-50',
+		},
 	];
 
 	return (

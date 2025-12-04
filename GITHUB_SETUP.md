@@ -4,10 +4,10 @@
 
 1. 访问 https://github.com/new
 2. 填写仓库信息：
-   - **Repository name**: `task-tools`（或你喜欢的名称）
-   - **Description**: `习惯养成游戏 PWA - 离线游戏化任务管理应用`
-   - **Visibility**: 选择 Public 或 Private
-   - **不要勾选** "Add a README file"、"Add .gitignore"、"Choose a license"（项目已有这些文件）
+    - **Repository name**: `task-tools`（或你喜欢的名称）
+    - **Description**: `习惯养成游戏 PWA - 离线游戏化任务管理应用`
+    - **Visibility**: 选择 Public 或 Private
+    - **不要勾选** "Add a README file"、"Add .gitignore"、"Choose a license"（项目已有这些文件）
 3. 点击 **Create repository**
 
 ## 步骤 2：连接本地仓库到 GitHub
@@ -52,6 +52,5 @@ git push
 
 ## 注意事项
 
-- `.gitignore` 已配置，`node_modules` 和 `dist` 文件夹不会被提交（这是正确的）
-- 如果使用 GitHub Pages，需要配置构建工作流或手动构建后提交 `dist` 文件夹
-
+-   `.gitignore` 已配置，`node_modules` 和 `dist` 文件夹不会被提交（这是正确的）
+-   如果使用 GitHub Pages，需要配置构建工作流或手动构建后提交 `dist` 文件夹

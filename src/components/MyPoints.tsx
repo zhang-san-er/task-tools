@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTaskRecordStore } from '../stores/taskRecordStore';
 import { useUserStore } from '../stores/userStore';
 import { useRewardStore } from '../stores/rewardStore';
 import { ConfirmDialog } from './ConfirmDialog';
 
 export const MyPoints: React.FC = () => {
+	const navigate = useNavigate();
 	const { totalPoints, deductPoints } = useUserStore();
 	const { getRecords } = useTaskRecordStore();
 	const { getRedeemedRewards, addManualRedeemRecord } =
 		useRewardStore();
 	const records = getRecords();
 	const redeemedRewards = getRedeemedRewards();
+	const displayedRecords = records.slice(0, 5);
+	const hasMoreRecords = records.length > 5;
 
 	const [showExchangeDialog, setShowExchangeDialog] =
 		useState(false);
@@ -153,15 +157,15 @@ export const MyPoints: React.FC = () => {
 			</div>
 
 			{/* 积分兑换入口 */}
-			<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
-				<h3 className="text-lg font-black text-gray-800 mb-4">
+			<div className="glass-effect rounded-xl card-shadow p-3 mb-4 border border-white/50">
+				<h3 className="text-sm font-black text-gray-800 mb-2">
 					🎁 积分兑换
 				</h3>
 				<button
 					onClick={() => setShowExchangeDialog(true)}
-					className="w-full rounded-2xl p-6 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/60 hover:border-purple-300/60 hover:shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-3">
-					<div className="text-5xl">🎁</div>
-					<div className="text-sm font-bold text-gray-700">
+					className="w-full rounded-lg p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/60 hover:border-purple-300/60 hover:shadow-md transition-all active:scale-95 flex flex-row items-center justify-center gap-2">
+					<div className="text-xl">🎁</div>
+					<div className="text-xs font-bold text-gray-700">
 						点击兑换奖励
 					</div>
 				</button>
@@ -225,57 +229,68 @@ export const MyPoints: React.FC = () => {
 						</p>
 					</div>
 				) : (
-					<div className="space-y-3">
-						{records.map(record => (
-							<div
-								key={record.id}
-								className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/60 shadow-sm hover:shadow-md transition-shadow">
-								<div className="flex justify-between items-start mb-2">
-									<div className="flex-1">
-										<div className="flex items-center gap-2 mb-1">
-											<span
-												className={`text-xs px-2 py-1 rounded-full font-semibold ${
-													record.taskType ===
+					<>
+						<div className="space-y-3">
+							{displayedRecords.map(record => (
+								<div
+									key={record.id}
+									className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/60 shadow-sm hover:shadow-md transition-shadow">
+									<div className="flex justify-between items-start mb-2">
+										<div className="flex-1">
+											<div className="flex items-center gap-2 mb-1">
+												<span
+													className={`text-xs px-2 py-1 rounded-full font-semibold ${
+														record.taskType ===
+														'demon'
+															? 'bg-red-500 text-white'
+															: 'bg-blue-500 text-white'
+													}`}>
+													{record.taskType ===
 													'demon'
-														? 'bg-red-500 text-white'
-														: 'bg-blue-500 text-white'
-												}`}>
-												{record.taskType ===
-												'demon'
-													? '💰 付费'
-													: '⭐ 主线'}
-											</span>
+														? '⚡ 付费'
+														: '⭐ 主线'}
+												</span>
+											</div>
+											<h4 className="font-bold text-gray-800 text-sm mb-1">
+												{record.taskName}
+											</h4>
+											<p className="text-xs text-gray-500">
+												{formatDateTime(
+													record.completedAt
+												)}
+											</p>
 										</div>
-										<h4 className="font-bold text-gray-800 text-sm mb-1">
-											{record.taskName}
-										</h4>
-										<p className="text-xs text-gray-500">
-											{formatDateTime(
-												record.completedAt
-											)}
-										</p>
-									</div>
-									<div className="text-right">
-										{record.cost &&
-											record.cost > 0 && (
-												<div className="text-sm font-bold text-red-600 mb-1">
-													-{record.cost}
-												</div>
-											)}
-										<div className="text-lg font-black text-orange-600">
-											+{record.points}
-										</div>
-										<div className="text-xs text-gray-500">
+										<div className="text-right">
 											{record.cost &&
-											record.cost > 0
-												? '净收益'
-												: '任务积分'}
+												record.cost > 0 && (
+													<div className="text-sm font-bold text-red-600 mb-1">
+														-{record.cost}
+													</div>
+												)}
+											<div className="text-lg font-black text-orange-600">
+												+{record.points}
+											</div>
+											<div className="text-xs text-gray-500">
+												{record.cost &&
+												record.cost > 0
+													? '净收益'
+													: '任务积分'}
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
-						))}
-					</div>
+							))}
+						</div>
+						{hasMoreRecords && (
+							<button
+								onClick={() =>
+									navigate('/task-platform/records')
+								}
+								className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">
+								查看全部记录 ({records.length} 条)
+							</button>
+						)}
+					</>
 				)}
 			</div>
 
@@ -299,19 +314,19 @@ export const MyPoints: React.FC = () => {
 						<form
 							onSubmit={handleExchangeSubmit}
 							onClick={e => e.stopPropagation()}
-							className="glass-effect rounded-2xl card-shadow-lg border border-white/50 w-full max-w-md max-h-[80vh] flex flex-col">
+							className="glass-effect rounded-2xl card-shadow-lg border border-white/50 w-full max-w-sm max-h-[70vh] flex flex-col">
 							{/* 固定标题 */}
-							<div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200/50">
-								<h3 className="text-lg font-black text-gray-800 text-center">
+							<div className="flex-shrink-0 px-4 pt-4 pb-3 border-b border-gray-200/50">
+								<h3 className="text-base font-black text-gray-800 text-center">
 									🎁 积分兑换
 								</h3>
 							</div>
 
 							{/* 可滚动内容区域 */}
-							<div className="flex-1 overflow-y-auto px-6 py-4">
-								<div className="space-y-4">
+							<div className="flex-1 overflow-y-auto px-4 py-3">
+								<div className="space-y-3">
 									<div>
-										<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+										<label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
 											消耗积分
 										</label>
 										<input
@@ -326,11 +341,11 @@ export const MyPoints: React.FC = () => {
 														.value,
 												})
 											}
-											className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+											className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all text-sm"
 											placeholder="请输入积分数量"
 											required
 										/>
-										<p className="text-xs text-gray-500 mt-2 font-medium">
+										<p className="text-xs text-gray-500 mt-1.5 font-medium">
 											当前可用积分：
 											<span className="font-bold text-orange-600">
 												{totalPoints}
@@ -339,7 +354,7 @@ export const MyPoints: React.FC = () => {
 									</div>
 
 									<div>
-										<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+										<label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
 											积分用途
 										</label>
 										<textarea
@@ -354,9 +369,9 @@ export const MyPoints: React.FC = () => {
 															.value,
 												})
 											}
-											className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
+											className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all resize-none text-sm"
 											placeholder="请输入积分用途，例如：买奶茶、看电影等"
-											rows={4}
+											rows={3}
 											required
 										/>
 									</div>
@@ -364,11 +379,11 @@ export const MyPoints: React.FC = () => {
 							</div>
 
 							{/* 固定按钮区域 */}
-							<div className="flex-shrink-0 px-6 pt-4 pb-6 border-t border-gray-200/50">
-								<div className="flex gap-3">
+							<div className="flex-shrink-0 px-4 pt-3 pb-4 border-t border-gray-200/50">
+								<div className="flex gap-2">
 									<button
 										type="submit"
-										className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">
+										className="flex-1 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all">
 										确认兑换
 									</button>
 									<button
@@ -382,7 +397,7 @@ export const MyPoints: React.FC = () => {
 												description: '',
 											});
 										}}
-										className="flex-1 px-4 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 active:scale-95 transition-all">
+										className="flex-1 px-3 py-2 bg-gray-100 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-200 active:scale-95 transition-all">
 										取消
 									</button>
 								</div>

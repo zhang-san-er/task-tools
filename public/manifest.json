@@ -1,7 +1,7 @@
 {
-  "name": "任务平台",
-  "short_name": "任务平台",
-  "description": "高效的任务管理与奖励系统，支持完全离线使用",
+  "name": "工具集 - 实用工具合集",
+  "short_name": "工具集",
+  "description": "包含任务管理、想法记录等多种实用工具，完全离线使用，支持PWA安装",
   "theme_color": "#3b82f6",
   "background_color": "#ffffff",
   "display": "standalone",
