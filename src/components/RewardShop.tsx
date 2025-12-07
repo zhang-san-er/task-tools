@@ -46,33 +46,22 @@ export const RewardShop: React.FC = () => {
 		cost: number,
 		name: string
 	) => {
-		if (totalPoints < cost) {
-			setConfirmDialog({
-				open: true,
-				title: '积分不足',
-				message: `需要 ${cost} 积分，当前只有 ${totalPoints} 积分。`,
-				onConfirm: () =>
-					setConfirmDialog({
-						...confirmDialog,
-						open: false,
-					}),
-				confirmText: '知道了',
-				cancelText: '',
-			});
-			return;
-		}
+		const newTotalPoints = totalPoints - cost;
+		const pointsMessage = newTotalPoints < 0 
+			? `\n\n⚠️ 兑换后积分将变为 ${newTotalPoints}（负分，超前消费）`
+			: `\n\n兑换后剩余积分：${newTotalPoints}`;
 
 		setConfirmDialog({
 			open: true,
 			title: '确认兑换',
-			message: `确定要用 ${cost} 积分兑换「${name}」吗？`,
+			message: `确定要用 ${cost} 积分兑换「${name}」吗？${pointsMessage}`,
 			onConfirm: () => {
 				setConfirmDialog({ ...confirmDialog, open: false });
 				if (deductPoints(cost)) {
 					redeemReward(rewardId);
 					alert(`🎉 兑换成功！已扣除 ${cost} 积分。`);
 				} else {
-					alert('兑换失败，积分不足！');
+					alert('兑换失败！');
 				}
 			},
 			confirmText: '确认兑换',
@@ -245,7 +234,7 @@ export const RewardShop: React.FC = () => {
 							</h3>
 						</div>
 						{/* 可滚动内容区域 */}
-						<div className="flex-1 overflow-y-auto px-6 py-4">
+						<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
 							<div className="space-y-3">
 								<input
 									type="text"
@@ -331,7 +320,8 @@ export const RewardShop: React.FC = () => {
 					</div>
 				) : (
 					displayRewards.map(reward => {
-						const canAfford = totalPoints >= reward.cost;
+						// 允许负分，所以总是可以兑换
+						const canAfford = true;
 						const isActive = reward.isActive !== false;
 
 						return (

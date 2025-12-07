@@ -42,6 +42,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			task?.dailyLimit !== undefined
 				? task.dailyLimit
 				: undefined,
+		exceedDaysRewardFormula: task?.exceedDaysRewardFormula || '',
 	});
 	const [timeLimitType, setTimeLimitType] = useState<
 		'none' | 'expiresAt' | 'durationDays'
@@ -107,6 +108,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			expiresAt: undefined,
 			durationDays: undefined,
 			dailyLimit: undefined,
+			exceedDaysRewardFormula: '',
 		});
 		setTimeLimitType('none');
 		setDurationDaysInput('');
@@ -130,12 +132,24 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 		return tomorrow.toISOString().split('T')[0];
 	};
 
+	const handleOverlayWheel = (e: React.WheelEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+	};
+
+	const handleOverlayTouchMove = (e: React.TouchEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+	};
+
 	return (
 		<>
 			{/* 蒙层 */}
 			<div
-				className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+				className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] overflow-hidden"
 				onClick={onClose}
+				onWheel={handleOverlayWheel}
+				onTouchMove={handleOverlayTouchMove}
 			/>
 
 			{/* 弹窗 */}
@@ -157,7 +171,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 					</div>
 
 					{/* 可滚动内容区域 */}
-					<div className="flex-1 overflow-y-auto px-6 py-4">
+					<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
 						<div className="space-y-4">
 							<div>
 								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
@@ -543,6 +557,27 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 														📅
 														任务被领取后，将从领取时开始计算截止日期
 													</p>
+													{/* 超越天数奖励设置 */}
+													<div className="mt-4">
+														<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+															🎁 超越天数奖励（可选）
+														</label>
+														<input
+															type="text"
+															value={formData.exceedDaysRewardFormula || ''}
+															onChange={e =>
+																setFormData({
+																	...formData,
+																	exceedDaysRewardFormula: e.target.value,
+																})
+															}
+															className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+															placeholder="例如：2n+10（n为超越天数）"
+														/>
+														<p className="text-xs text-gray-500 mt-2 font-medium">
+															✨ 设置奖励公式，当任务超过截止日期完成时，可获得额外积分奖励。公式中 n 代表超越天数，例如：2n+10 表示超越1天奖励12积分，超越2天奖励14积分
+														</p>
+													</div>
 												</div>
 											)}
 										</div>

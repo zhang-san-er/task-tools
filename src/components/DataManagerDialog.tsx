@@ -147,7 +147,7 @@ export const DataManagerDialog: React.FC<DataManagerDialogProps> = ({
 					</div>
 
 					{/* 可滚动内容区域 */}
-					<div className="flex-1 overflow-y-auto px-6 py-4">
+					<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
 						<div className="space-y-4">
 							{/* 数据统计 */}
 							<div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">

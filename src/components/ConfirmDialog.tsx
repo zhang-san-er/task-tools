@@ -43,7 +43,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 						</h3>
 					</div>
 					{/* 可滚动内容区域 */}
-					<div className="flex-1 overflow-y-auto px-6 py-4">
+					<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
 						<p className="text-sm text-gray-600 whitespace-pre-line">
 							{message}
 						</p>

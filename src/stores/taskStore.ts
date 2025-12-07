@@ -40,6 +40,7 @@ export const useTaskStore = create<TaskState>()(
           expiresAt: taskData.expiresAt,
           durationDays: taskData.durationDays,
           dailyLimit: taskData.dailyLimit !== undefined ? taskData.dailyLimit : 1,
+          exceedDaysRewardFormula: taskData.exceedDaysRewardFormula,
         };
         
         set((state) => ({
@@ -61,6 +62,7 @@ export const useTaskStore = create<TaskState>()(
                   expiresAt: taskData.expiresAt,
                   durationDays: taskData.durationDays,
                   dailyLimit: taskData.dailyLimit !== undefined ? taskData.dailyLimit : 1,
+                  exceedDaysRewardFormula: taskData.exceedDaysRewardFormula,
                 }
               : task
           ),
@@ -125,6 +127,7 @@ export const useTaskStore = create<TaskState>()(
                   ...task,
                   isClaimed: true,
                   expiresAt: expiresAt,
+                  claimedAt: new Date(), // 记录领取时间（每次领取都更新）
                 };
               }
               return task;
@@ -143,6 +146,7 @@ export const useTaskStore = create<TaskState>()(
                   isCompleted: false,
                   completedAt: undefined,
                   isStarted: false,
+                  // 注意：不清除 claimedAt，因为需要用它来计算超越天数奖励
                 }
               : task
           ),
@@ -244,6 +248,8 @@ export const useTaskStore = create<TaskState>()(
               entryCost: processedTask.type === 'demon' ? (processedTask.entryCost || 0) : undefined,
               durationDays: processedTask.durationDays !== undefined ? processedTask.durationDays : undefined,
               dailyLimit: processedTask.dailyLimit !== undefined ? processedTask.dailyLimit : 1,
+              exceedDaysRewardFormula: processedTask.exceedDaysRewardFormula !== undefined ? processedTask.exceedDaysRewardFormula : undefined,
+              claimedAt: processedTask.claimedAt ? new Date(processedTask.claimedAt) : undefined,
             };
           });
         }

@@ -66,7 +66,7 @@ export const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({
 						</h3>
 					</div>
 					{/* 可滚动内容区域 */}
-					<div className="flex-1 overflow-y-auto px-4 py-3">
+					<div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3">
 						{categories.length === 0 ? (
 							<p className="text-xs text-gray-500 text-center py-4">
 								暂无分区

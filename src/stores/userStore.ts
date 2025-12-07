@@ -45,11 +45,7 @@ export const useUserStore = create<UserState>()(
 			},
 
 			deductPoints: (points: number) => {
-				const state = get();
-				if (state.totalPoints < points) {
-					return false; // 积分不足
-				}
-
+				// 允许负分，支持超前消费
 				set(currentState => {
 					const newTotalPoints =
 						currentState.totalPoints - points;

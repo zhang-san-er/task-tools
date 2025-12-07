@@ -8,6 +8,10 @@ import {
 	isExpired,
 	getDaysRemaining,
 } from '../utils/dateUtils';
+import {
+	calculateExceedDays,
+	calculateExceedDaysReward,
+} from '../utils/rewardCalculator';
 import { ConfirmDialog } from './ConfirmDialog';
 import { TaskForm } from './TaskForm';
 
@@ -71,6 +75,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		isExpired(task.expiresAt) &&
 		!task.isCompleted;
 
+	// 计算超越天数奖励
+	const exceedDays = calculateExceedDays(
+		task.expiresAt,
+		task.claimedAt,
+		task.durationDays
+	);
+	const exceedReward = calculateExceedDaysReward(
+		task.exceedDaysRewardFormula,
+		exceedDays
+	);
+
 	// 检查今日完成次数
 	const getTodayCompletedCount = () => {
 		const today = new Date();
@@ -99,26 +114,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 			task.entryCost &&
 			task.entryCost > 0
 		) {
-			if (totalPoints < task.entryCost) {
-				setConfirmDialog({
-					open: true,
-					title: '积分不足',
-					message: `需要 ${task.entryCost} 积分入场，当前只有 ${totalPoints} 积分。`,
-					onConfirm: () =>
-						setConfirmDialog({
-							...confirmDialog,
-							open: false,
-						}),
-					confirmText: '知道了',
-					cancelText: '',
-				});
-				return;
-			}
+			const newTotalPoints = totalPoints - task.entryCost;
+			const pointsMessage = newTotalPoints < 0 
+				? `\n\n⚠️ 支付后积分将变为 ${newTotalPoints}（负分，超前消费）`
+				: `\n\n支付后剩余积分：${newTotalPoints}`;
 
 			setConfirmDialog({
 				open: true,
 				title: '确认支付',
-				message: `确定要支付 ${task.entryCost} 积分领取这个付费挑战吗？\n\n⚠️ 如果失败，入场积分将被扣除！`,
+				message: `确定要支付 ${task.entryCost} 积分领取这个付费挑战吗？${pointsMessage}\n\n⚠️ 如果失败，入场积分将被扣除！`,
 				onConfirm: () => {
 					if (handleTaskStart(task.entryCost!)) {
 						claimTask(task.id);
@@ -131,7 +135,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 						setConfirmDialog({
 							open: true,
 							title: '支付失败',
-							message: '积分不足，无法领取挑战！',
+							message: '支付失败！',
 							onConfirm: () =>
 								setConfirmDialog({
 									...confirmDialog,
@@ -224,10 +228,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		// 非付费任务且没有时间限制，直接完成，需要确认
 		if (task.type === 'main' && !hasTimeLimit) {
 			if (!task.isCompleted) {
+				const totalPoints = task.points + exceedReward;
+				const rewardText = exceedReward > 0 
+					? `\n\n基础积分：${task.points}\n超越天数奖励：+${exceedReward} 积分\n总计：${totalPoints} 积分`
+					: `\n\n完成后将获得 ${task.points} 积分。`;
 				setConfirmDialog({
 					open: true,
 					title: '确认完成',
-					message: `确定要完成「${task.name}」吗？\n\n完成后将获得 ${task.points} 积分。`,
+					message: `确定要完成「${task.name}」吗？${rewardText}`,
 					onConfirm: () => {
 						toggleTaskCompletion(task.id);
 						handleTaskCompletion(
@@ -236,9 +244,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 							false,
 							undefined
 						);
+						// 如果有超越天数奖励，额外添加奖励积分
+						if (exceedReward > 0) {
+							handleTaskCompletion(
+								task.id,
+								exceedReward,
+								false,
+								undefined
+							);
+						}
 						addRecord(
 							task.name,
-							task.points,
+							totalPoints,
 							task.type,
 							undefined
 						);
@@ -261,6 +278,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
 		// 有时间限制或付费任务，需要先领取才能完成
 		if (!task.isCompleted) {
+			const totalPoints = task.points + exceedReward;
 			// 完成悬赏（付费任务领取时已支付，这里直接完成）
 			toggleTaskCompletion(task.id);
 			handleTaskCompletion(
@@ -269,10 +287,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				task.type === 'demon',
 				task.entryCost
 			);
-			// 记录完成记录，包含支出积分
+			// 如果有超越天数奖励，额外添加奖励积分
+			if (exceedReward > 0) {
+				handleTaskCompletion(
+					task.id,
+					exceedReward,
+					task.type === 'demon',
+					task.entryCost
+				);
+			}
+			// 记录完成记录，包含支出积分和总积分
 			addRecord(
 				task.name,
-				task.points,
+				totalPoints,
 				task.type,
 				task.entryCost
 			);
@@ -434,10 +461,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 									className={`text-xs font-bold px-2 py-1 rounded-lg ${
 										task.isStarted
 											? 'bg-red-100 text-red-700'
-											: totalPoints >=
-											  task.entryCost
-											? 'bg-yellow-100 text-yellow-700'
-											: 'bg-gray-100 text-gray-500'
+											: 'bg-yellow-100 text-yellow-700'
 									}`}>
 									{task.isStarted
 										? '✓ 已入场'
@@ -462,6 +486,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 						<span className="text-sm font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
 							+{task.points} 积分
 						</span>
+						{exceedReward > 0 && (
+							<span className="text-sm font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+								🎁 +{exceedReward} 超越奖励
+							</span>
+						)}
 					</div>
 					<div className="flex-shrink-0 flex flex-col gap-1.5">
 						{task.type === 'demon' || hasTimeLimit ? (

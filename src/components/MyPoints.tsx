@@ -57,22 +57,6 @@ export const MyPoints: React.FC = () => {
 			return;
 		}
 
-		if (cost > totalPoints) {
-			setConfirmDialog({
-				open: true,
-				title: '积分不足',
-				message: `需要 ${cost} 积分，当前只有 ${totalPoints} 积分。`,
-				onConfirm: () =>
-					setConfirmDialog({
-						...confirmDialog,
-						open: false,
-					}),
-				confirmText: '知道了',
-				cancelText: '',
-			});
-			return;
-		}
-
 		if (!exchangeForm.description.trim()) {
 			setConfirmDialog({
 				open: true,
@@ -89,11 +73,16 @@ export const MyPoints: React.FC = () => {
 			return;
 		}
 
+		const newTotalPoints = totalPoints - cost;
+		const pointsMessage = newTotalPoints < 0 
+			? `\n\n⚠️ 兑换后积分将变为 ${newTotalPoints}（负分，超前消费）`
+			: `\n\n兑换后剩余积分：${newTotalPoints}`;
+
 		// 显示确认弹窗
 		setConfirmDialog({
 			open: true,
 			title: '确认兑换',
-			message: `确定要使用 ${cost} 积分吗？\n\n用途：${exchangeForm.description}`,
+			message: `确定要使用 ${cost} 积分吗？\n\n用途：${exchangeForm.description}${pointsMessage}`,
 			onConfirm: () => {
 				setConfirmDialog({ ...confirmDialog, open: false });
 				if (deductPoints(cost)) {
@@ -107,7 +96,7 @@ export const MyPoints: React.FC = () => {
 					setConfirmDialog({
 						open: true,
 						title: '兑换失败',
-						message: '积分不足，无法兑换！',
+						message: '兑换失败！',
 						onConfirm: () =>
 							setConfirmDialog({
 								...confirmDialog,
@@ -325,7 +314,7 @@ export const MyPoints: React.FC = () => {
 							</div>
 
 							{/* 可滚动内容区域 */}
-							<div className="flex-1 overflow-y-auto px-4 py-3">
+							<div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3">
 								<div className="space-y-3">
 									<div>
 										<label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">
@@ -334,7 +323,6 @@ export const MyPoints: React.FC = () => {
 										<input
 											type="number"
 											min="1"
-											max={totalPoints}
 											value={exchangeForm.cost}
 											onChange={e =>
 												setExchangeForm({
@@ -348,9 +336,12 @@ export const MyPoints: React.FC = () => {
 											required
 										/>
 										<p className="text-xs text-gray-500 mt-1.5 font-medium">
-											当前可用积分：
+											当前积分：
 											<span className="font-bold text-orange-600">
 												{totalPoints}
+											</span>
+											<span className="text-gray-400 ml-2">
+												（允许负分，支持超前消费）
 											</span>
 										</p>
 									</div>
