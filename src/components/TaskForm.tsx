@@ -224,7 +224,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 												⭐
 											</div>
 											<div className="text-sm font-bold text-gray-700">
-												主线悬赏
+												普通任务
 											</div>
 										</div>
 									</label>
@@ -356,7 +356,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 												周期任务
 											</div>
 											<div className="text-xs text-gray-500 mt-1">
-												可重复执行
+												周期性执行
 											</div>
 										</div>
 									</label>

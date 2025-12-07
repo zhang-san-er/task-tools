@@ -65,7 +65,7 @@ export const TaskList: React.FC = () => {
 							? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-blue-200'
 							: 'bg-white/80 text-gray-600 shadow-sm'
 					}`}>
-					⭐ 主线悬赏 ({mainTasks.length})
+					⭐ 普通任务 ({mainTasks.length})
 				</button>
 				<button
 					onClick={() => setFilter('demon')}

@@ -98,7 +98,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	const isDailyLimitReached = todayCompletedCount >= dailyLimit;
 
 	const getTaskTypeLabel = () => {
-		return task.type === 'demon' ? '⚡ 付费挑战' : '⭐ 主线悬赏';
+		return task.type === 'demon' ? '⚡ 付费挑战' : '⭐ 普通任务';
 	};
 
 	const getTaskTypeBadgeColor = () => {
@@ -364,6 +364,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 								className={`text-xs px-2.5 py-1 rounded-full font-semibold shadow-sm ${getTaskTypeBadgeColor()}`}>
 								{getTaskTypeLabel()}
 							</span>
+							{task.isRepeatable && (
+								<span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-semibold">
+									🔄 周期任务
+								</span>
+							)}
 							{isTaskExpired && (
 								<span className="text-xs px-2.5 py-1 rounded-full bg-gray-500/80 text-white font-medium">
 									⏰ 已过期
@@ -468,18 +473,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 										: `入场 ${task.entryCost} 积分`}
 								</span>
 							)}
-						{task.isRepeatable && (
-							<span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-semibold">
-								🔄 可重复
-							</span>
-						)}
-						{task.isRepeatable && dailyLimit > 1 && (
-							<span className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-semibold">
-								📊 每日 {dailyLimit} 次
-							</span>
-						)}
-						{isDailyLimitReached && (
-							<span className="text-xs px-2 py-1 rounded-lg bg-gray-200 text-gray-600 font-semibold">
+						{(task.isRepeatable || dailyLimit > 1 || todayCompletedCount > 0) && (
+							<span className={`text-xs px-2 py-1 rounded-lg font-semibold ${
+								isDailyLimitReached
+									? 'bg-gray-200 text-gray-600'
+									: 'bg-indigo-100 text-indigo-700'
+							}`}>
 								今日已完成 {todayCompletedCount}/{dailyLimit} 次
 							</span>
 						)}

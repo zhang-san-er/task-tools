@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "type-check": "tsc --noEmit",
+    "check:ts": "tsc --noEmit",
     "preview": "vite preview",
     "deploy": "./deploy.sh",
     "serve:prod": "npm run build && npx serve -s dist -p 5173",
