@@ -8,7 +8,6 @@ export const calculateExceedDaysReward = (
 	formula: string | undefined,
 	exceedDays: number
 ): number => {
-    exceedDays = 2;
 	if (!formula || exceedDays <= 0) {
 		return 0;
 	}
@@ -74,8 +73,8 @@ export const calculateExceedDaysReward = (
  */
 export const calculateExceedDays = (
 	expiresAt: Date | undefined,
-	claimedAt: Date | undefined,
-	durationDays: number | undefined
+	_claimedAt: Date | undefined,
+	_durationDays: number | undefined
 ): number => {
 	if (!expiresAt) {
 		return 0;
