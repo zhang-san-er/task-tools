@@ -279,32 +279,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		// 有时间限制或付费任务，需要先领取才能完成
 		if (!task.isCompleted) {
 			const totalPoints = task.points + exceedReward;
-			// 完成悬赏（付费任务领取时已支付，这里直接完成）
-			toggleTaskCompletion(task.id);
-			handleTaskCompletion(
-				task.id,
-				task.points,
-				task.type === 'demon',
-				task.entryCost
-			);
-			// 如果有超越天数奖励，额外添加奖励积分
-			if (exceedReward > 0) {
-				handleTaskCompletion(
-					task.id,
-					exceedReward,
-					task.type === 'demon',
-					task.entryCost
-				);
-			}
-			// 记录完成记录，包含支出积分和总积分
-			addRecord(
-				task.name,
-				totalPoints,
-				task.type,
-				task.entryCost
-			);
-			// 任务完成后自动取消领取
-			unclaimTask(task.id);
+			const rewardText = exceedReward > 0 
+				? `\n\n基础积分：${task.points}\n超越天数奖励：+${exceedReward} 积分\n总计：${totalPoints} 积分`
+				: `\n\n完成后将获得 ${task.points} 积分。`;
+			const entryCostText = task.type === 'demon' && task.entryCost && task.entryCost > 0
+				? `\n\n⚠️ 注意：这是付费挑战，入场时已支付 ${task.entryCost} 积分。`
+				: '';
+			setConfirmDialog({
+				open: true,
+				title: '确认完成',
+				message: `确定要完成「${task.name}」吗？${rewardText}${entryCostText}`,
+				onConfirm: () => {
+					// 完成悬赏（付费任务领取时已支付，这里直接完成）
+					toggleTaskCompletion(task.id);
+					handleTaskCompletion(
+						task.id,
+						task.points,
+						task.type === 'demon',
+						task.entryCost
+					);
+					// 如果有超越天数奖励，额外添加奖励积分
+					if (exceedReward > 0) {
+						handleTaskCompletion(
+							task.id,
+							exceedReward,
+							task.type === 'demon',
+							task.entryCost
+						);
+					}
+					// 记录完成记录，包含支出积分和总积分
+					addRecord(
+						task.name,
+						totalPoints,
+						task.type,
+						task.entryCost
+					);
+					// 任务完成后自动取消领取
+					unclaimTask(task.id);
+					setConfirmDialog({
+						...confirmDialog,
+						open: false,
+					});
+				},
+				confirmText: '确认完成',
+				cancelText: '取消',
+				confirmButtonClass:
+					'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+			});
 		} else {
 			// 取消完成（不扣除生命值，只是取消完成状态）
 			toggleTaskCompletion(task.id);
