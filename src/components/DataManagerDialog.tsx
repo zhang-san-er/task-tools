@@ -25,7 +25,39 @@ export const DataManagerDialog: React.FC<DataManagerDialogProps> = ({
 	const [importError, setImportError] = useState<string | null>(null);
 	const [pendingImportData, setPendingImportData] = useState<{ ideas: Idea[]; categories: string[] } | null>(null);
 
+	// 阻止背景滚动
+	React.useEffect(() => {
+		if (!open) return;
+		
+		// 保存当前滚动位置
+		const scrollY = window.scrollY;
+		// 锁定背景滚动
+		document.body.style.overflow = 'hidden';
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${scrollY}px`;
+		document.body.style.width = '100%';
+		
+		return () => {
+			// 恢复背景滚动
+			document.body.style.overflow = '';
+			document.body.style.position = '';
+			document.body.style.top = '';
+			document.body.style.width = '';
+			// 恢复滚动位置
+			window.scrollTo(0, scrollY);
+		};
+	}, [open]);
+
 	if (!open) return null;
+
+	const handleOverlayTouchMove = (e: React.TouchEvent) => {
+		// 只阻止在蒙层上的滑动，允许弹窗内容区域滑动
+		const target = e.target as HTMLElement;
+		if (target.classList.contains('dialog-overlay')) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	};
 
 	// 导出数据
 	const handleExport = () => {
@@ -130,12 +162,29 @@ export const DataManagerDialog: React.FC<DataManagerDialogProps> = ({
 		<>
 			{/* 蒙层 */}
 			<div
-				className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+				className="dialog-overlay fixed top-0 left-0 right-0 bottom-0 bg-black/50 backdrop-blur-sm z-[100] overflow-hidden"
+				style={{
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					width: '100%',
+					height: '100%',
+					paddingBottom: 'env(safe-area-inset-bottom)',
+					paddingTop: 'env(safe-area-inset-top)',
+				}}
 				onClick={onClose}
+				onTouchMove={handleOverlayTouchMove}
 			/>
 
 			{/* 对话框 */}
-			<div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+			<div 
+				className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+				style={{
+					paddingTop: 'env(safe-area-inset-top)',
+					paddingBottom: 'env(safe-area-inset-bottom)',
+				}}
+			>
 				<div
 					onClick={e => e.stopPropagation()}
 					className="glass-effect rounded-2xl card-shadow-lg border border-white/50 w-full max-w-md max-h-[80vh] flex flex-col">

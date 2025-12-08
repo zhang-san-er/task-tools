@@ -14,9 +14,22 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 }) => {
 	// 阻止背景滚动
 	useEffect(() => {
+		// 保存当前滚动位置
+		const scrollY = window.scrollY;
+		// 锁定背景滚动
 		document.body.style.overflow = 'hidden';
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${scrollY}px`;
+		document.body.style.width = '100%';
+		
 		return () => {
-			document.body.style.overflow = 'unset';
+			// 恢复背景滚动
+			document.body.style.overflow = '';
+			document.body.style.position = '';
+			document.body.style.top = '';
+			document.body.style.width = '';
+			// 恢复滚动位置
+			window.scrollTo(0, scrollY);
 		};
 	}, []);
 	const { addTask, updateTask } = useTaskStore();
@@ -138,22 +151,42 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 	};
 
 	const handleOverlayTouchMove = (e: React.TouchEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
+		// 只阻止在蒙层上的滑动，允许弹窗内容区域滑动
+		const target = e.target as HTMLElement;
+		if (target.classList.contains('dialog-overlay')) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
 	};
 
 	return (
 		<>
 			{/* 蒙层 */}
 			<div
-				className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] overflow-hidden"
+				className="dialog-overlay fixed top-0 left-0 right-0 bottom-0 bg-black/50 backdrop-blur-sm z-[100] overflow-hidden"
+				style={{
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					width: '100%',
+					height: '100%',
+					paddingBottom: 'env(safe-area-inset-bottom)',
+					paddingTop: 'env(safe-area-inset-top)',
+				}}
 				onClick={onClose}
 				onWheel={handleOverlayWheel}
 				onTouchMove={handleOverlayTouchMove}
 			/>
 
 			{/* 弹窗 */}
-			<div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+			<div 
+				className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+				style={{
+					paddingTop: 'env(safe-area-inset-top)',
+					paddingBottom: 'env(safe-area-inset-bottom)',
+				}}
+			>
 				<form
 					onSubmit={handleSubmit}
 					onClick={e => e.stopPropagation()}

@@ -254,7 +254,12 @@ export const HomePage: React.FC = () => {
 				</footer>
 
 				{/* 底部操作按钮 */}
-				<div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 items-center">
+				<div 
+					className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30 flex gap-2 items-center"
+					style={{
+						bottom: `calc(1rem + env(safe-area-inset-bottom))`,
+					}}
+				>
 					{/* 检查更新按钮 */}
 					<button
 						onClick={checkForUpdates}

@@ -65,7 +65,12 @@ export const TaskPlatform: React.FC = () => {
 				</footer>
 
 				{/* 底部导航 */}
-				<div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-lg z-50">
+				<div 
+					className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-lg z-50"
+					style={{
+						paddingBottom: 'env(safe-area-inset-bottom)',
+					}}
+				>
 					<div className="grid grid-cols-3 h-16">
 						<button
 							onClick={() => setCurrentPage('home')}
@@ -148,6 +153,7 @@ export const TaskPlatform: React.FC = () => {
 		</div>
 	);
 };
+
 
 
 
