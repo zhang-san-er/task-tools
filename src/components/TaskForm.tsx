@@ -78,8 +78,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			return;
 		}
 
-		if (!formData.points || formData.points < 1) {
-			alert('请输入有效的奖励积分（至少为1）');
+		if (!formData.points || formData.points < 0.1) {
+			alert('请输入有效的奖励积分（至少为0.1）');
 			return;
 		}
 
@@ -301,7 +301,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 								</label>
 								<input
 									type="number"
-									min="1"
+									step="0.1"
+									min="0.1"
 									max="1000"
 									value={formData.points || ''}
 									onChange={e => {
@@ -311,7 +312,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 											points:
 												value === ''
 													? 0
-													: parseInt(
+													: parseFloat(
 															value
 													  ) || 0,
 										});
@@ -319,7 +320,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 									className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
 								/>
 								<p className="text-xs text-gray-500 mt-2 font-medium">
-									✨ 完成任务可获得此积分奖励
+									✨ 完成任务可获得此积分奖励（支持0.1积分级别）
 								</p>
 							</div>
 
@@ -330,6 +331,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 									</label>
 									<input
 										type="number"
+										step="0.1"
 										min="0"
 										max="10000"
 										value={
@@ -339,7 +341,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 											setFormData({
 												...formData,
 												entryCost:
-													parseInt(
+													parseFloat(
 														e.target.value
 													) || 0,
 											})
@@ -348,7 +350,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 									/>
 									<p className="text-xs text-gray-500 mt-2 font-medium">
 										⚠️
-										付费挑战需要支付入场积分才能开始，失败时入场积分将被扣除
+										付费挑战需要支付入场积分才能开始，失败时入场积分将被扣除（支持0.1积分级别）
 									</p>
 								</div>
 							)}

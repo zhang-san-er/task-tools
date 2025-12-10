@@ -54,12 +54,12 @@ export const RewardShop: React.FC = () => {
 		setConfirmDialog({
 			open: true,
 			title: '确认兑换',
-			message: `确定要用 ${cost} 积分兑换「${name}」吗？${pointsMessage}`,
+			message: `确定要用 ${cost.toFixed(1)} 积分兑换「${name}」吗？${pointsMessage}`,
 			onConfirm: () => {
 				setConfirmDialog({ ...confirmDialog, open: false });
 				if (deductPoints(cost)) {
 					redeemReward(rewardId);
-					alert(`🎉 兑换成功！已扣除 ${cost} 积分。`);
+									alert(`🎉 兑换成功！已扣除 ${cost.toFixed(1)} 积分。`);
 				} else {
 					alert('兑换失败！');
 				}
@@ -101,7 +101,7 @@ export const RewardShop: React.FC = () => {
 		updateReward(editingReward.id, {
 			name: formData.get('name') as string,
 			description: formData.get('description') as string,
-			cost: parseInt(formData.get('cost') as string) || 0,
+			cost: parseFloat(formData.get('cost') as string) || 0,
 			icon: formData.get('icon') as string,
 			category: formData.get('category') as 'virtual' | 'real',
 		});
@@ -117,7 +117,7 @@ export const RewardShop: React.FC = () => {
 			id: crypto.randomUUID(),
 			name: formData.get('name') as string,
 			description: formData.get('description') as string,
-			cost: parseInt(formData.get('cost') as string) || 0,
+			cost: parseFloat(formData.get('cost') as string) || 0,
 			icon: formData.get('icon') as string,
 			category: formData.get('category') as 'virtual' | 'real',
 		};
@@ -180,14 +180,15 @@ export const RewardShop: React.FC = () => {
 								required
 								className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
 							/>
-							<input
-								type="number"
-								name="cost"
-								placeholder="所需积分"
-								required
-								min="1"
-								className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
-							/>
+								<input
+									type="number"
+									name="cost"
+									placeholder="所需积分"
+									required
+									step="0.1"
+									min="0.1"
+									className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
+								/>
 							<select
 								name="category"
 								required
@@ -268,7 +269,8 @@ export const RewardShop: React.FC = () => {
 									defaultValue={editingReward.cost}
 									placeholder="所需积分"
 									required
-									min="1"
+									step="0.1"
+									min="0.1"
 									className="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400"
 								/>
 								<select
@@ -390,7 +392,7 @@ export const RewardShop: React.FC = () => {
 														? 'text-orange-600'
 														: 'text-gray-400'
 												}`}>
-												{reward.cost} 积分
+												{reward.cost.toFixed(1)} 积分
 											</div>
 											<div className="flex gap-2">
 												{isEditing && (

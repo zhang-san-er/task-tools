@@ -7,9 +7,9 @@ import { ConfirmDialog } from './ConfirmDialog';
 
 export const MyPoints: React.FC = () => {
 	const navigate = useNavigate();
-	const { totalPoints, deductPoints } = useUserStore();
-	const { getRecords } = useTaskRecordStore();
-	const { getRedeemedRewards, addManualRedeemRecord } =
+	const { totalPoints, deductPoints, removePoints, removeExperience, addPoints } = useUserStore();
+	const { getRecords, deleteRecord } = useTaskRecordStore();
+	const { getRedeemedRewards, addManualRedeemRecord, deleteRedeemRecord } =
 		useRewardStore();
 	const records = getRecords();
 	const redeemedRewards = getRedeemedRewards();
@@ -40,12 +40,12 @@ export const MyPoints: React.FC = () => {
 	const handleExchangeSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		const cost = parseInt(exchangeForm.cost);
-		if (!cost || cost < 1) {
+		const cost = parseFloat(exchangeForm.cost);
+		if (!cost || cost < 0.1) {
 			setConfirmDialog({
 				open: true,
 				title: '输入错误',
-				message: '请输入有效的积分数量（至少为1）',
+				message: '请输入有效的积分数量（至少为0.1）',
 				onConfirm: () =>
 					setConfirmDialog({
 						...confirmDialog,
@@ -82,7 +82,7 @@ export const MyPoints: React.FC = () => {
 		setConfirmDialog({
 			open: true,
 			title: '确认兑换',
-			message: `确定要使用 ${cost} 积分吗？\n\n用途：${exchangeForm.description}${pointsMessage}`,
+			message: `确定要使用 ${cost.toFixed(1)} 积分吗？\n\n用途：${exchangeForm.description}${pointsMessage}`,
 			onConfirm: () => {
 				setConfirmDialog({ ...confirmDialog, open: false });
 				if (deductPoints(cost)) {
@@ -147,19 +147,34 @@ export const MyPoints: React.FC = () => {
 				</div>
 			</div>
 
-			{/* 积分兑换入口 */}
-			<div className="glass-effect rounded-xl card-shadow p-3 mb-4 border border-white/50">
-				<h3 className="text-sm font-black text-gray-800 mb-2">
-					🎁 积分兑换
-				</h3>
-				<button
-					onClick={() => setShowExchangeDialog(true)}
-					className="w-full rounded-lg p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/60 hover:border-purple-300/60 hover:shadow-md transition-all active:scale-95 flex flex-row items-center justify-center gap-2">
-					<div className="text-xl">🎁</div>
-					<div className="text-xs font-bold text-gray-700">
-						点击兑换奖励
-					</div>
-				</button>
+			{/* 积分兑换入口和日历入口 */}
+			<div className="grid grid-cols-2 gap-3 mb-4">
+				<div className="glass-effect rounded-xl card-shadow p-3 border border-white/50">
+					<h3 className="text-sm font-black text-gray-800 mb-2">
+						🎁 积分兑换
+					</h3>
+					<button
+						onClick={() => setShowExchangeDialog(true)}
+						className="w-full rounded-lg p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200/60 hover:border-purple-300/60 hover:shadow-md transition-all active:scale-95 flex flex-row items-center justify-center gap-2">
+						<div className="text-xl">🎁</div>
+						<div className="text-xs font-bold text-gray-700">
+							兑换奖励
+						</div>
+					</button>
+				</div>
+				<div className="glass-effect rounded-xl card-shadow p-3 border border-white/50">
+					<h3 className="text-sm font-black text-gray-800 mb-2">
+						📅 任务日历
+					</h3>
+					<button
+						onClick={() => navigate('/task-platform/calendar')}
+						className="w-full rounded-lg p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200/60 hover:border-blue-300/60 hover:shadow-md transition-all active:scale-95 flex flex-row items-center justify-center gap-2">
+						<div className="text-xl">📅</div>
+						<div className="text-xs font-bold text-gray-700">
+							查看日历
+						</div>
+					</button>
+				</div>
 			</div>
 
 			{/* 兑换记录 */}
@@ -189,13 +204,52 @@ export const MyPoints: React.FC = () => {
 											)}
 										</p>
 									</div>
-									<div className="text-right">
-										<div className="text-lg font-black text-red-600">
-											-{record.cost}
+									<div className="flex items-center gap-2">
+										<div className="text-right">
+											<div className="text-lg font-black text-red-600">
+												-{record.cost.toFixed(1)}
+											</div>
+											<div className="text-xs text-gray-500">
+												消耗积分
+											</div>
 										</div>
-										<div className="text-xs text-gray-500">
-											消耗积分
-										</div>
+										<button
+											onClick={() => {
+												setConfirmDialog({
+													open: true,
+													title: '删除兑换记录',
+													message: `确定要删除「${record.rewardName}」的兑换记录吗？\n\n⚠️ 删除后将返还 ${record.cost.toFixed(1)} 积分`,
+													onConfirm: () => {
+														const deletedRecord = deleteRedeemRecord(record.id);
+														if (deletedRecord) {
+															// 返还兑换时扣除的积分
+															addPoints(deletedRecord.cost);
+														}
+														setConfirmDialog({
+															...confirmDialog,
+															open: false,
+														});
+													},
+													confirmText: '删除',
+													cancelText: '取消',
+													confirmButtonClass: 'bg-red-500 text-white',
+												});
+											}}
+											className="text-gray-400 hover:text-red-500 transition-colors p-1"
+											aria-label="删除记录">
+											<svg
+												className="w-5 h-5"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24">
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+												/>
+											</svg>
+										</button>
 									</div>
 								</div>
 							</div>
@@ -251,22 +305,70 @@ export const MyPoints: React.FC = () => {
 												)}
 											</p>
 										</div>
-										<div className="text-right">
-											{record.cost &&
-												record.cost > 0 && (
-													<div className="text-sm font-bold text-red-600 mb-1">
-														-{record.cost}
-													</div>
-												)}
-											<div className="text-lg font-black text-orange-600">
-												+{record.points}
-											</div>
-											<div className="text-xs text-gray-500">
+										<div className="flex items-center gap-2">
+											<div className="text-right">
 												{record.cost &&
-												record.cost > 0
-													? '净收益'
-													: '任务积分'}
+													record.cost > 0 && (
+														<div className="text-sm font-bold text-red-600 mb-1">
+															-{record.cost.toFixed(1)}
+														</div>
+													)}
+												<div className="text-lg font-black text-orange-600">
+													+{record.points.toFixed(1)}
+												</div>
+												<div className="text-xs text-gray-500">
+													{record.cost &&
+													record.cost > 0
+														? '净收益'
+														: '任务积分'}
+												</div>
 											</div>
+											<button
+												onClick={() => {
+													// 计算需要回退的积分和经验
+													const pointsToRollback = record.points;
+													const costToRollback = record.cost || 0;
+													const totalRollback = pointsToRollback + costToRollback;
+													
+													setConfirmDialog({
+														open: true,
+														title: '删除完成记录',
+														message: `确定要删除「${record.taskName}」的完成记录吗？\n\n⚠️ 删除后将回退：\n- 积分：${pointsToRollback.toFixed(1)}\n${costToRollback > 0 ? `- 入场费：${costToRollback.toFixed(1)}\n` : ''}- 经验：${pointsToRollback.toFixed(1)}\n总计回退：${totalRollback.toFixed(1)} 积分`,
+														onConfirm: () => {
+															// 回退积分和经验
+															if (totalRollback > 0) {
+																removePoints(totalRollback);
+															}
+															if (pointsToRollback > 0) {
+																removeExperience(pointsToRollback);
+															}
+															// 删除记录
+															deleteRecord(record.id);
+															setConfirmDialog({
+																...confirmDialog,
+																open: false,
+															});
+														},
+														confirmText: '删除',
+														cancelText: '取消',
+														confirmButtonClass: 'bg-red-500 text-white',
+													});
+												}}
+												className="text-gray-400 hover:text-red-500 transition-colors p-1"
+												aria-label="删除记录">
+												<svg
+													className="w-5 h-5"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24">
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+													/>
+												</svg>
+											</button>
 										</div>
 									</div>
 								</div>
@@ -322,7 +424,8 @@ export const MyPoints: React.FC = () => {
 										</label>
 										<input
 											type="number"
-											min="1"
+											step="0.1"
+											min="0.1"
 											value={exchangeForm.cost}
 											onChange={e =>
 												setExchangeForm({
@@ -341,7 +444,7 @@ export const MyPoints: React.FC = () => {
 												{totalPoints}
 											</span>
 											<span className="text-gray-400 ml-2">
-												（允许负分，支持超前消费）
+												（允许负分，支持超前消费，支持0.1积分级别）
 											</span>
 										</p>
 									</div>

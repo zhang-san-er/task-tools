@@ -90,11 +90,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 	const getTodayCompletedCount = () => {
 		const today = new Date();
 		const todayRecords = getRecordsByDate(today);
-		return todayRecords.filter(record => record.taskName === task.name).length;
+		return todayRecords.filter(
+			record =>
+				// 新数据：使用 taskId 匹配
+				(record.taskId && record.taskId === task.id) ||
+				// 老数据：使用 taskName 匹配（兼容性）
+				(!record.taskId && record.taskName === task.name)
+		).length;
 	};
 
 	const todayCompletedCount = getTodayCompletedCount();
-	const dailyLimit = task.dailyLimit !== undefined ? task.dailyLimit : 1;
+	const dailyLimit =
+		task.dailyLimit !== undefined ? task.dailyLimit : 1;
 	const isDailyLimitReached = todayCompletedCount >= dailyLimit;
 
 	const getTaskTypeLabel = () => {
@@ -115,14 +122,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 			task.entryCost > 0
 		) {
 			const newTotalPoints = totalPoints - task.entryCost;
-			const pointsMessage = newTotalPoints < 0 
-				? `\n\n⚠️ 支付后积分将变为 ${newTotalPoints}（负分，超前消费）`
-				: `\n\n支付后剩余积分：${newTotalPoints}`;
+			const pointsMessage =
+				newTotalPoints < 0
+					? `\n\n⚠️ 支付后积分将变为 ${newTotalPoints}（负分，超前消费）`
+					: `\n\n支付后剩余积分：${newTotalPoints}`;
 
 			setConfirmDialog({
 				open: true,
 				title: '确认支付',
-				message: `确定要支付 ${task.entryCost} 积分领取这个付费挑战吗？${pointsMessage}\n\n⚠️ 如果失败，入场积分将被扣除！`,
+				message: `确定要支付 ${task.entryCost?.toFixed(
+					1
+				)} 积分领取这个付费挑战吗？${pointsMessage}\n\n⚠️ 如果失败，入场积分将被扣除！`,
 				onConfirm: () => {
 					if (handleTaskStart(task.entryCost!)) {
 						claimTask(task.id);
@@ -229,9 +239,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		if (task.type === 'main' && !hasTimeLimit) {
 			if (!task.isCompleted) {
 				const totalPoints = task.points + exceedReward;
-				const rewardText = exceedReward > 0 
-					? `\n\n基础积分：${task.points}\n超越天数奖励：+${exceedReward} 积分\n总计：${totalPoints} 积分`
-					: `\n\n完成后将获得 ${task.points} 积分。`;
+				const rewardText =
+					exceedReward > 0
+						? `\n\n基础积分：${task.points.toFixed(
+								1
+						  )}\n超越天数奖励：+${exceedReward.toFixed(
+								1
+						  )} 积分\n总计：${totalPoints.toFixed(
+								1
+						  )} 积分`
+						: `\n\n完成后将获得 ${task.points.toFixed(
+								1
+						  )} 积分。`;
 				setConfirmDialog({
 					open: true,
 					title: '确认完成',
@@ -254,6 +273,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 							);
 						}
 						addRecord(
+							task.id,
 							task.name,
 							totalPoints,
 							task.type,
@@ -279,12 +299,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 		// 有时间限制或付费任务，需要先领取才能完成
 		if (!task.isCompleted) {
 			const totalPoints = task.points + exceedReward;
-			const rewardText = exceedReward > 0 
-				? `\n\n基础积分：${task.points}\n超越天数奖励：+${exceedReward} 积分\n总计：${totalPoints} 积分`
-				: `\n\n完成后将获得 ${task.points} 积分。`;
-			const entryCostText = task.type === 'demon' && task.entryCost && task.entryCost > 0
-				? `\n\n⚠️ 注意：这是付费挑战，入场时已支付 ${task.entryCost} 积分。`
-				: '';
+			const rewardText =
+				exceedReward > 0
+					? `\n\n基础积分：${task.points.toFixed(
+							1
+					  )}\n超越天数奖励：+${exceedReward.toFixed(
+							1
+					  )} 积分\n总计：${totalPoints.toFixed(1)} 积分`
+					: `\n\n完成后将获得 ${task.points.toFixed(
+							1
+					  )} 积分。`;
+			const entryCostText =
+				task.type === 'demon' &&
+				task.entryCost &&
+				task.entryCost > 0
+					? `\n\n⚠️ 注意：这是付费挑战，入场时已支付 ${task.entryCost} 积分。`
+					: '';
 			setConfirmDialog({
 				open: true,
 				title: '确认完成',
@@ -309,6 +339,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 					}
 					// 记录完成记录，包含支出积分和总积分
 					addRecord(
+						task.id,
 						task.name,
 						totalPoints,
 						task.type,
@@ -494,21 +525,25 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 										: `入场 ${task.entryCost} 积分`}
 								</span>
 							)}
-						{(task.isRepeatable || dailyLimit > 1 || todayCompletedCount > 0) && (
-							<span className={`text-xs px-2 py-1 rounded-lg font-semibold ${
-								isDailyLimitReached
-									? 'bg-gray-200 text-gray-600'
-									: 'bg-indigo-100 text-indigo-700'
-							}`}>
-								今日已完成 {todayCompletedCount}/{dailyLimit} 次
+						{(task.isRepeatable ||
+							dailyLimit > 1 ||
+							todayCompletedCount > 0) && (
+							<span
+								className={`text-xs px-2 py-1 rounded-lg font-semibold ${
+									isDailyLimitReached
+										? 'bg-gray-200 text-gray-600'
+										: 'bg-indigo-100 text-indigo-700'
+								}`}>
+								今日已完成 {todayCompletedCount}/
+								{dailyLimit} 次
 							</span>
 						)}
 						<span className="text-sm font-black text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
-							+{task.points} 积分
+							+{task.points.toFixed(1)} 积分
 						</span>
 						{exceedReward > 0 && (
 							<span className="text-sm font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg">
-								🎁 +{exceedReward} 超越奖励
+								🎁 +{exceedReward.toFixed(1)} 超越奖励
 							</span>
 						)}
 					</div>
@@ -530,9 +565,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 									</button>
 									<button
 										onClick={handleToggle}
-										disabled={task.isCompleted || isDailyLimitReached}
+										disabled={
+											task.isCompleted ||
+											isDailyLimitReached
+										}
 										className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
-											task.isCompleted || isDailyLimitReached
+											task.isCompleted ||
+											isDailyLimitReached
 												? 'bg-gray-200 text-gray-400 cursor-not-allowed'
 												: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
 										}`}
@@ -553,9 +592,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 							// 非付费任务且没有时间限制：直接显示完成按钮
 							<button
 								onClick={handleToggle}
-								disabled={task.isCompleted || isDailyLimitReached}
+								disabled={
+									task.isCompleted ||
+									isDailyLimitReached
+								}
 								className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap ${
-									task.isCompleted || isDailyLimitReached
+									task.isCompleted ||
+									isDailyLimitReached
 										? 'bg-gray-200 text-gray-400 cursor-not-allowed'
 										: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-200/50 hover:shadow-purple-300/50'
 								}`}

@@ -102,11 +102,11 @@ export const TaskRecords: React.FC = () => {
 												{record.cost &&
 													record.cost > 0 && (
 														<div className="text-sm font-bold text-red-600 mb-1">
-															-{record.cost}
+															-{record.cost.toFixed(1)}
 														</div>
 													)}
 												<div className="text-lg font-black text-orange-600">
-													+{record.points}
+													+{record.points.toFixed(1)}
 												</div>
 												<div className="text-xs text-gray-500">
 													{record.cost &&

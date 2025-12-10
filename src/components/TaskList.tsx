@@ -15,12 +15,33 @@ export const TaskList: React.FC = () => {
 	const mainTasks = getTasksByType('main');
 	const demonTasks = getTasksByType('demon');
 
-	const filteredTasks =
+	// 任务排序：已完成的任务排在后面，未完成的任务保持原有顺序
+	const sortTasks = (taskList: typeof tasks) => {
+		const incompleteTasks = taskList.filter(task => !task.isCompleted);
+		const completedTasks = taskList.filter(task => task.isCompleted);
+		
+		// 已完成的任务按完成时间升序排列（最早的在前，最新的在后，即最新的在最底部）
+		const sortedCompletedTasks = completedTasks.sort((a, b) => {
+			const timeA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+			const timeB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+			// 如果都没有完成时间，保持原顺序
+			if (timeA === 0 && timeB === 0) return 0;
+			// 升序：最早的在前，最新的在后（底部）
+			return timeA - timeB;
+		});
+		
+		// 先显示未完成的任务，再显示已完成的任务（已完成的任务排在后面）
+		return [...incompleteTasks, ...sortedCompletedTasks];
+	};
+
+	const filteredTasksRaw =
 		filter === 'all'
 			? tasks
 			: filter === 'active'
 			? activeTasks
 			: getTasksByType(filter);
+	
+	const filteredTasks = sortTasks(filteredTasksRaw);
 
 	return (
 		<div className="w-full">

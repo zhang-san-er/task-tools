@@ -12,6 +12,7 @@ interface RewardState {
 	redeemReward: (rewardId: string) => boolean;
 	addManualRedeemRecord: (cost: number, description: string) => void;
 	getRedeemedRewards: () => RewardRecord[];
+	deleteRedeemRecord: (recordId: string) => RewardRecord | null;
 }
 
 const defaultRewards: Reward[] = [
@@ -155,6 +156,21 @@ export const useRewardStore = create<RewardState>()(
 
 			getRedeemedRewards: () => {
 				return get().redeemedRewards;
+			},
+
+			deleteRedeemRecord: (recordId: string) => {
+				const record = get().redeemedRewards.find(
+					r => r.id === recordId
+				);
+				if (!record) return null;
+
+				set(state => ({
+					redeemedRewards: state.redeemedRewards.filter(
+						r => r.id !== recordId
+					),
+				}));
+
+				return record;
 			},
 		}),
 		{

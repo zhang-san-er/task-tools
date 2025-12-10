@@ -7,6 +7,8 @@ interface UserState extends User {
 	addPoints: (points: number) => void;
 	deductPoints: (points: number) => boolean;
 	addExperience: (amount: number) => void;
+	removePoints: (points: number) => void;
+	removeExperience: (amount: number) => void;
 	handleTaskStart: (entryCost: number) => boolean;
 	handleTaskCompletion: (
 		taskId: string,
@@ -71,6 +73,36 @@ export const useUserStore = create<UserState>()(
 					return {
 						experience: newExperience,
 						level: newLevel,
+					};
+				});
+			},
+
+			removePoints: (points: number) => {
+				set(state => {
+					const newTotalPoints = state.totalPoints - points;
+					const newLevel = calculateLevel(state.experience);
+					const newCurrentPoints =
+						newTotalPoints - (newLevel - 1) * 100;
+
+					return {
+						totalPoints: newTotalPoints,
+						currentPoints: newCurrentPoints,
+						level: newLevel,
+					};
+				});
+			},
+
+			removeExperience: (amount: number) => {
+				set(state => {
+					const newExperience = Math.max(0, state.experience - amount);
+					const newLevel = calculateLevel(newExperience);
+					const newCurrentPoints =
+						state.totalPoints - (newLevel - 1) * 100;
+					
+					return {
+						experience: newExperience,
+						level: newLevel,
+						currentPoints: newCurrentPoints,
 					};
 				});
 			},
