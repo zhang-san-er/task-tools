@@ -36,6 +36,7 @@ export const useTaskStore = create<TaskState>()(
           isStarted: false,
           isClaimed: false,
           isRepeatable: taskData.isRepeatable !== undefined ? taskData.isRepeatable : true,
+          isAvoidanceTask: taskData.isAvoidanceTask || false,
           createdAt: new Date(),
           expiresAt: taskData.expiresAt,
           durationDays: taskData.durationDays,
@@ -59,6 +60,7 @@ export const useTaskStore = create<TaskState>()(
                   points: taskData.points,
                   entryCost: taskData.type === 'demon' ? (taskData.entryCost || 0) : undefined,
                   isRepeatable: taskData.isRepeatable !== undefined ? taskData.isRepeatable : true,
+                  isAvoidanceTask: taskData.isAvoidanceTask || false,
                   expiresAt: taskData.expiresAt,
                   durationDays: taskData.durationDays,
                   dailyLimit: taskData.dailyLimit !== undefined ? taskData.dailyLimit : 1,
@@ -242,6 +244,7 @@ export const useTaskStore = create<TaskState>()(
             return {
               ...processedTask,
               isRepeatable: processedTask.isRepeatable !== undefined ? processedTask.isRepeatable : true,
+              isAvoidanceTask: processedTask.isAvoidanceTask !== undefined ? processedTask.isAvoidanceTask : false,
               isClaimed: processedTask.isClaimed !== undefined ? processedTask.isClaimed : false,
               isStarted: processedTask.isStarted !== undefined ? processedTask.isStarted : false,
               isCompleted: processedTask.isCompleted !== undefined ? processedTask.isCompleted : false,

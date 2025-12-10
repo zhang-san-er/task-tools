@@ -412,12 +412,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				<div className="flex justify-between items-start mb-3">
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2 mb-2 flex-wrap">
+							{task.isAvoidanceTask && (
+								<span className="text-xs px-2.5 py-1 rounded-md font-semibold shadow-sm bg-orange-500 text-white">
+									🎯 特殊挑战
+								</span>
+							)}
 							<span
-								className={`text-xs px-2.5 py-1 rounded-full font-semibold shadow-sm ${getTaskTypeBadgeColor()}`}>
+								className={`text-xs px-2.5 py-1 rounded-md font-semibold shadow-sm ${getTaskTypeBadgeColor()}`}>
 								{getTaskTypeLabel()}
 							</span>
 							{task.isRepeatable && (
-								<span className="text-xs px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-semibold">
+								<span className="text-xs px-2 py-1 rounded-md bg-purple-100 text-purple-700 font-semibold">
 									🔄 周期任务
 								</span>
 							)}

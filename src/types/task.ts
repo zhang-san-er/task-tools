@@ -10,6 +10,7 @@ export interface Task {
 	isStarted?: boolean; // 是否已开始（已支付入场费）
 	isClaimed?: boolean; // 是否已领取
 	isRepeatable?: boolean; // 是否可重复执行
+	isAvoidanceTask?: boolean; // 是否为逃避但需要做的任务
 	createdAt: Date;
 	completedAt?: Date;
 	expiresAt?: Date;
@@ -25,6 +26,7 @@ export interface TaskFormData {
 	points: number;
 	entryCost?: number; // 入场积分（仅付费挑战）
 	isRepeatable?: boolean; // 是否可重复执行
+	isAvoidanceTask?: boolean; // 是否为逃避但需要做的任务
 	expiresAt?: Date;
 	durationDays?: number; // 持续天数（与expiresAt互斥）
 	dailyLimit?: number; // 一天可以完成的次数

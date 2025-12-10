@@ -1,12 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTaskRecordStore } from '../stores/taskRecordStore';
+import { useTaskStore } from '../stores/taskStore';
 import type { TaskRecord } from '../types/taskRecord';
 
 export const TaskCalendar: React.FC = () => {
 	const { getRecords } = useTaskRecordStore();
-	const records = getRecords();
+	const { tasks } = useTaskStore();
+	const allRecords = getRecords();
 	const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 	const [currentMonth, setCurrentMonth] = useState(new Date());
+	const [selectedTaskId, setSelectedTaskId] = useState<string>('all'); // 'all' 表示显示所有任务
+
+	// 初始化时默认选中今天
+	useEffect(() => {
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		setSelectedDate(today);
+	}, []);
 
 	// 获取当前月份的第一天和最后一天
 	const getMonthStart = (date: Date) => {
@@ -55,6 +65,22 @@ export const TaskCalendar: React.FC = () => {
 		return days;
 	}, [currentMonth]);
 
+	// 根据选中的任务筛选记录
+	const records = useMemo(() => {
+		if (selectedTaskId === 'all') {
+			return allRecords;
+		}
+		// 根据任务ID或任务名称筛选（兼容老数据）
+		return allRecords.filter(record => {
+			if (record.taskId) {
+				return record.taskId === selectedTaskId;
+			}
+			// 老数据：通过任务名称匹配
+			const task = tasks.find(t => t.id === selectedTaskId);
+			return task && record.taskName === task.name;
+		});
+	}, [allRecords, selectedTaskId, tasks]);
+
 	// 按日期分组记录
 	const recordsByDate = useMemo(() => {
 		const grouped: Record<string, TaskRecord[]> = {};
@@ -88,6 +114,14 @@ export const TaskCalendar: React.FC = () => {
 		if (!date) return false;
 		const dateKey = date.toISOString().split('T')[0];
 		return !!recordsByDate[dateKey];
+	};
+
+	// 判断某天是否有选中任务的记录（用于标记）
+	const hasTaskRecord = (date: Date | null): boolean => {
+		if (!date || selectedTaskId === 'all') return false;
+		const dateKey = date.toISOString().split('T')[0];
+		const dayRecords = recordsByDate[dateKey] || [];
+		return dayRecords.length > 0;
 	};
 
 	// 判断是否是今天
@@ -128,8 +162,144 @@ export const TaskCalendar: React.FC = () => {
 	const selectedRecords = selectedDate ? getRecordsForDate(selectedDate) : [];
 	const selectedTotalPoints = selectedDate ? getTotalPointsForDate(selectedDate) : 0;
 
+	// 获取选中任务的名称
+	const selectedTaskName = useMemo(() => {
+		if (selectedTaskId === 'all') return '全部任务';
+		const task = tasks.find(t => t.id === selectedTaskId);
+		return task ? task.name : '全部任务';
+	}, [selectedTaskId, tasks]);
+
+	const [isTaskSelectOpen, setIsTaskSelectOpen] = useState(false);
+	const taskSelectRef = React.useRef<HTMLDivElement>(null);
+
+	// 点击外部关闭下拉框
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				taskSelectRef.current &&
+				!taskSelectRef.current.contains(event.target as Node)
+			) {
+				setIsTaskSelectOpen(false);
+			}
+		};
+
+		if (isTaskSelectOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isTaskSelectOpen]);
+
+	const selectedTask = selectedTaskId === 'all' 
+		? { id: 'all', name: '全部任务' }
+		: tasks.find(t => t.id === selectedTaskId) || { id: 'all', name: '全部任务' };
+
 	return (
 		<div className="w-full">
+			{/* 任务筛选 */}
+			<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50 relative" style={{ zIndex: 100 }}>
+				<label className="block text-sm font-bold text-gray-700 mb-3">
+					🔍 筛选任务
+				</label>
+				<div ref={taskSelectRef} className="relative" style={{ zIndex: 200 }}>
+					<button
+						type="button"
+						onClick={() => setIsTaskSelectOpen(!isTaskSelectOpen)}
+						className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all text-sm font-semibold text-gray-800 flex items-center justify-between hover:border-purple-300 shadow-sm hover:shadow-md">
+						<span className="flex items-center gap-2">
+							<span className="text-purple-500">📋</span>
+							<span>{selectedTask.name}</span>
+						</span>
+						<svg
+							className={`w-5 h-5 text-gray-400 transition-transform ${
+								isTaskSelectOpen ? 'rotate-180' : ''
+							}`}
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24">
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M19 9l-7 7-7-7"
+							/>
+						</svg>
+					</button>
+
+					{isTaskSelectOpen && (
+						<div className="absolute w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-2xl max-h-64 overflow-auto" style={{ zIndex: 9999 }}>
+							<button
+								type="button"
+								onClick={() => {
+									setSelectedTaskId('all');
+									setIsTaskSelectOpen(false);
+								}}
+								className={`w-full px-4 py-3 text-left text-sm transition-colors first:rounded-t-xl ${
+									selectedTaskId === 'all'
+										? 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 font-bold border-l-4 border-purple-500'
+										: 'text-gray-700 hover:bg-gray-50'
+								}`}>
+								<div className="flex items-center gap-3">
+									{selectedTaskId === 'all' && (
+										<svg
+											className="w-5 h-5 text-purple-600 flex-shrink-0"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24">
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M5 13l4 4L19 7"
+											/>
+										</svg>
+									)}
+									<span className="text-base">📋</span>
+									<span className="flex-1">全部任务</span>
+								</div>
+							</button>
+							{tasks.map(task => (
+								<button
+									key={task.id}
+									type="button"
+									onClick={() => {
+										setSelectedTaskId(task.id);
+										setIsTaskSelectOpen(false);
+									}}
+									className={`w-full px-4 py-3 text-left text-sm transition-colors last:rounded-b-xl ${
+										selectedTaskId === task.id
+											? 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 font-bold border-l-4 border-purple-500'
+											: 'text-gray-700 hover:bg-gray-50'
+									}`}>
+									<div className="flex items-center gap-3">
+										{selectedTaskId === task.id && (
+											<svg
+												className="w-5 h-5 text-purple-600 flex-shrink-0"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24">
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M5 13l4 4L19 7"
+												/>
+											</svg>
+										)}
+										<span className={`text-base ${task.type === 'demon' ? 'text-red-500' : 'text-blue-500'}`}>
+											{task.type === 'demon' ? '⚡' : '⭐'}
+										</span>
+										<span className="flex-1">{task.name}</span>
+									</div>
+								</button>
+							))}
+						</div>
+					)}
+				</div>
+			</div>
+
 			{/* 日历头部 */}
 			<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
 				<div className="flex items-center justify-between mb-4">
@@ -165,6 +335,7 @@ export const TaskCalendar: React.FC = () => {
 						const isCurrentMonthDay = isCurrentMonth(date);
 						const isTodayDay = isToday(date);
 						const hasRecordsDay = hasRecords(date);
+						const hasTaskRecordDay = hasTaskRecord(date);
 						const isSelected = selectedDate && date && 
 							date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
 						const totalPoints = date ? getTotalPointsForDate(date) : 0;
@@ -175,13 +346,15 @@ export const TaskCalendar: React.FC = () => {
 								onClick={() => date && setSelectedDate(date)}
 								disabled={!date || !isCurrentMonthDay}
 								className={`
-									aspect-square p-1 rounded-lg transition-all text-xs font-semibold
+									aspect-square p-1 rounded-lg transition-all text-xs font-semibold relative
 									${!date || !isCurrentMonthDay
 										? 'text-gray-300 cursor-default'
 										: isSelected
 										? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-105'
 										: isTodayDay
 										? 'bg-blue-100 text-blue-700 border-2 border-blue-400'
+										: hasTaskRecordDay && selectedTaskId !== 'all'
+										? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border-2 border-yellow-400'
 										: hasRecordsDay
 										? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-300'
 										: 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
@@ -191,10 +364,13 @@ export const TaskCalendar: React.FC = () => {
 									<div className="text-sm font-bold">
 										{date ? date.getDate() : ''}
 									</div>
-									{hasRecordsDay && (
+									{hasRecordsDay && selectedTaskId === 'all' && (
 										<div className="text-[10px] mt-0.5">
 											+{totalPoints.toFixed(1)}
 										</div>
+									)}
+									{hasTaskRecordDay && selectedTaskId !== 'all' && (
+										<div className="absolute top-0.5 right-0.5 w-2 h-2 bg-yellow-500 rounded-full"></div>
 									)}
 								</div>
 							</button>
@@ -206,9 +382,14 @@ export const TaskCalendar: React.FC = () => {
 			{/* 选中日期的详细信息 */}
 			{selectedDate && (
 				<div className="glass-effect rounded-2xl card-shadow p-5 mb-4 border border-white/50">
-					<h3 className="text-lg font-black text-gray-800 mb-4">
+					<h3 className="text-lg font-black text-gray-800 mb-2">
 						📅 {formatDate(selectedDate)}
 					</h3>
+					{selectedTaskId !== 'all' && (
+						<p className="text-sm text-gray-600 mb-4">
+							筛选：{selectedTaskName}
+						</p>
+					)}
 					{selectedRecords.length === 0 ? (
 						<div className="text-center py-8">
 							<div className="text-4xl mb-2">📝</div>

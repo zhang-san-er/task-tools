@@ -15,6 +15,8 @@ export const MyPoints: React.FC = () => {
 	const redeemedRewards = getRedeemedRewards();
 	const displayedRecords = records.slice(0, 5);
 	const hasMoreRecords = records.length > 5;
+	const displayedRedeemedRewards = redeemedRewards.slice(0, 3);
+	const hasMoreRedeemedRewards = redeemedRewards.length > 3;
 
 	const [showExchangeDialog, setShowExchangeDialog] =
 		useState(false);
@@ -184,7 +186,7 @@ export const MyPoints: React.FC = () => {
 						🎁 兑换记录
 					</h3>
 					<div className="space-y-3">
-						{redeemedRewards.map(record => (
+						{displayedRedeemedRewards.map(record => (
 							<div
 								key={record.id}
 								className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200/60 shadow-sm hover:shadow-md transition-shadow">
@@ -255,6 +257,15 @@ export const MyPoints: React.FC = () => {
 							</div>
 						))}
 					</div>
+					{hasMoreRedeemedRewards && (
+						<button
+							onClick={() =>
+								navigate('/task-platform/reward-records')
+							}
+							className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">
+							查看全部记录 ({redeemedRewards.length} 条)
+						</button>
+					)}
 				</div>
 			)}
 

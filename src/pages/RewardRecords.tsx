@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTaskRecordStore } from '../stores/taskRecordStore';
+import { useRewardStore } from '../stores/rewardStore';
 import { useUserStore } from '../stores/userStore';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
-export const TaskRecords: React.FC = () => {
+export const RewardRecords: React.FC = () => {
 	const navigate = useNavigate();
-	const { getRecords, deleteRecord } = useTaskRecordStore();
-	const { removePoints, removeExperience } = useUserStore();
-	const records = getRecords();
+	const { getRedeemedRewards, deleteRedeemRecord } = useRewardStore();
+	const { addPoints } = useUserStore();
+	const records = getRedeemedRewards();
 	
 	const [confirmDialog, setConfirmDialog] = useState<{
 		open: boolean;
@@ -63,7 +63,7 @@ export const TaskRecords: React.FC = () => {
 								</svg>
 							</button>
 							<h1 className="text-3xl font-black text-white drop-shadow-lg">
-								📜 完成记录
+								🎁 兑换记录
 							</h1>
 							<div className="w-8"></div>
 						</div>
@@ -76,12 +76,12 @@ export const TaskRecords: React.FC = () => {
 				<div className="px-4 -mt-6 relative z-20">
 					{records.length === 0 ? (
 						<div className="glass-effect rounded-2xl card-shadow p-8 border border-white/50 text-center">
-							<div className="text-4xl mb-3">📝</div>
+							<div className="text-4xl mb-3">🎁</div>
 							<p className="text-gray-500 text-sm">
-								还没有完成记录
+								还没有兑换记录
 							</p>
 							<p className="text-gray-400 text-xs mt-1">
-								完成任务后，记录会显示在这里
+								兑换奖励后，记录会显示在这里
 							</p>
 						</div>
 					) : (
@@ -90,71 +90,44 @@ export const TaskRecords: React.FC = () => {
 								{records.map(record => (
 									<div
 										key={record.id}
-										className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-200/60 shadow-sm hover:shadow-md transition-shadow">
-										<div className="flex justify-between items-start mb-2">
+										className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200/60 shadow-sm hover:shadow-md transition-shadow">
+										<div className="flex justify-between items-start">
 											<div className="flex-1">
 												<div className="flex items-center gap-2 mb-1">
-													<span
-														className={`text-xs px-2 py-1 rounded-full font-semibold ${
-															record.taskType ===
-															'demon'
-																? 'bg-red-500 text-white'
-																: 'bg-blue-500 text-white'
-														}`}>
-														{record.taskType ===
-														'demon'
-															? '⚡ 付费'
-															: '⭐ 主线'}
+													<span className="text-2xl">
+														🎁
 													</span>
+													<h4 className="font-bold text-gray-800 text-sm">
+														{record.rewardName}
+													</h4>
 												</div>
-												<h4 className="font-bold text-gray-800 text-sm mb-1">
-													{record.taskName}
-												</h4>
 												<p className="text-xs text-gray-500">
 													{formatDateTime(
-														record.completedAt
+														record.redeemedAt
 													)}
 												</p>
 											</div>
 											<div className="flex items-center gap-2">
 												<div className="text-right">
-													{record.cost &&
-														record.cost > 0 && (
-															<div className="text-sm font-bold text-red-600 mb-1">
-																-{record.cost.toFixed(1)}
-															</div>
-														)}
-													<div className="text-lg font-black text-orange-600">
-														+{record.points.toFixed(1)}
+													<div className="text-lg font-black text-red-600">
+														-{record.cost.toFixed(1)}
 													</div>
 													<div className="text-xs text-gray-500">
-														{record.cost &&
-														record.cost > 0
-															? '净收益'
-															: '任务积分'}
+														消耗积分
 													</div>
 												</div>
 												<button
 													onClick={() => {
-														// 计算需要回退的积分和经验
-														const pointsToRollback = record.points;
-														const costToRollback = record.cost || 0;
-														const totalRollback = pointsToRollback + costToRollback;
-														
 														setConfirmDialog({
 															open: true,
-															title: '删除完成记录',
-															message: `确定要删除「${record.taskName}」的完成记录吗？\n\n⚠️ 删除后将回退：\n- 积分：${pointsToRollback.toFixed(1)}\n${costToRollback > 0 ? `- 入场费：${costToRollback.toFixed(1)}\n` : ''}- 经验：${pointsToRollback.toFixed(1)}\n总计回退：${totalRollback.toFixed(1)} 积分`,
+															title: '删除兑换记录',
+															message: `确定要删除「${record.rewardName}」的兑换记录吗？\n\n⚠️ 删除后将返还 ${record.cost.toFixed(1)} 积分`,
 															onConfirm: () => {
-																// 回退积分和经验
-																if (totalRollback > 0) {
-																	removePoints(totalRollback);
+																const deletedRecord = deleteRedeemRecord(record.id);
+																if (deletedRecord) {
+																	// 返还兑换时扣除的积分
+																	addPoints(deletedRecord.cost);
 																}
-																if (pointsToRollback > 0) {
-																	removeExperience(pointsToRollback);
-																}
-																// 删除记录
-																deleteRecord(record.id);
 																setConfirmDialog({
 																	...confirmDialog,
 																	open: false,

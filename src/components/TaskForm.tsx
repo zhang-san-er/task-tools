@@ -43,6 +43,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			task?.isRepeatable !== undefined
 				? task.isRepeatable
 				: true,
+		isAvoidanceTask: task?.isAvoidanceTask || false,
 		expiresAt: task?.expiresAt
 			? typeof task.expiresAt === 'string'
 				? new Date(task.expiresAt)
@@ -354,6 +355,33 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 									</p>
 								</div>
 							)}
+
+							<div>
+								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+									特殊标记
+								</label>
+								<label className="flex items-center gap-3 p-4 bg-white border-2 border-gray-200 rounded-xl cursor-pointer hover:border-purple-300 transition-all mb-4">
+									<input
+										type="checkbox"
+										checked={formData.isAvoidanceTask || false}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												isAvoidanceTask: e.target.checked,
+											})
+										}
+										className="w-5 h-5 border-2 border-gray-300 rounded text-purple-500 focus:ring-2 focus:ring-purple-200 cursor-pointer"
+									/>
+									<div className="flex-1">
+										<div className="text-sm font-bold text-gray-800 mb-1">
+											🎯 特殊挑战任务
+										</div>
+										<div className="text-xs text-gray-500">
+											标记那些具有特殊挑战性的任务
+										</div>
+									</div>
+								</label>
+							</div>
 
 							<div>
 								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">

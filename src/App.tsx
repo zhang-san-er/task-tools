@@ -4,6 +4,7 @@ import { HomePage } from './components/HomePage';
 import { TaskPlatform } from './pages/TaskPlatform';
 import { TaskRecords } from './pages/TaskRecords';
 import { TaskCalendarPage } from './pages/TaskCalendar';
+import { RewardRecords } from './pages/RewardRecords';
 import { IdeaNotes } from './pages/IdeaNotes';
 
 const App: React.FC = () => {
@@ -13,6 +14,7 @@ const App: React.FC = () => {
 			<Route path="/task-platform" element={<TaskPlatform />} />
 			<Route path="/task-platform/records" element={<TaskRecords />} />
 			<Route path="/task-platform/calendar" element={<TaskCalendarPage />} />
+			<Route path="/task-platform/reward-records" element={<RewardRecords />} />
 			<Route path="/idea-notes" element={<IdeaNotes />} />
 		</Routes>
 	);
