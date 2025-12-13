@@ -18,6 +18,7 @@ export interface Task {
 	dailyLimit?: number; // 一天可以完成的次数
 	exceedDaysRewardFormula?: string; // 超越天数奖励公式（如 "2n+10"，n为超越天数）
 	claimedAt?: Date; // 任务被领取的时间（用于计算超越天数）
+	order?: number; // 任务序号，用于排序
 }
 
 export interface TaskFormData {
@@ -31,4 +32,5 @@ export interface TaskFormData {
 	durationDays?: number; // 持续天数（与expiresAt互斥）
 	dailyLimit?: number; // 一天可以完成的次数
 	exceedDaysRewardFormula?: string; // 超越天数奖励公式（如 "2n+10"，n为超越天数）
+	order?: number; // 任务序号，用于排序
 }

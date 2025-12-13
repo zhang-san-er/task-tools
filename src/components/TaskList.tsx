@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTaskStore } from '../stores/taskStore';
 import type { TaskType } from '../types/task';
 import { TaskCard } from './TaskCard';
 import { TaskForm } from './TaskForm';
 
 export const TaskList: React.FC = () => {
-	const { tasks, getTasksByType, getActiveTasks } = useTaskStore();
+	const { tasks, getTasksByType, getActiveTasks, ensureAllTasksHaveOrder } = useTaskStore();
+	
+	// 确保所有任务都有序号（只在任务列表变化时检查）
+	useEffect(() => {
+		// 检查是否有任务没有序号
+		const hasTasksWithoutOrder = tasks.some(task => task.order === undefined);
+		if (hasTasksWithoutOrder) {
+			ensureAllTasksHaveOrder();
+		}
+	}, [tasks.length, ensureAllTasksHaveOrder]); // 只在任务数量变化时检查
 	const [filter, setFilter] = useState<'all' | TaskType | 'active'>(
 		'all'
 	);
@@ -15,23 +24,33 @@ export const TaskList: React.FC = () => {
 	const mainTasks = getTasksByType('main');
 	const demonTasks = getTasksByType('demon');
 
-	// 任务排序：已完成的任务排在后面，未完成的任务保持原有顺序
+	// 任务排序：先按序号排序，序号相同或没有序号的按完成状态排序
 	const sortTasks = (taskList: typeof tasks) => {
-		const incompleteTasks = taskList.filter(task => !task.isCompleted);
-		const completedTasks = taskList.filter(task => task.isCompleted);
-		
-		// 已完成的任务按完成时间升序排列（最早的在前，最新的在后，即最新的在最底部）
-		const sortedCompletedTasks = completedTasks.sort((a, b) => {
-			const timeA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
-			const timeB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
-			// 如果都没有完成时间，保持原顺序
-			if (timeA === 0 && timeB === 0) return 0;
-			// 升序：最早的在前，最新的在后（底部）
-			return timeA - timeB;
+		const sorted = [...taskList].sort((a, b) => {
+			// 先按序号排序（序号小的在前）
+			const orderA = a.order !== undefined ? a.order : Infinity;
+			const orderB = b.order !== undefined ? b.order : Infinity;
+			if (orderA !== orderB) {
+				return orderA - orderB;
+			}
+			
+			// 序号相同或都没有序号时，未完成的任务排在前面
+			if (a.isCompleted !== b.isCompleted) {
+				return a.isCompleted ? 1 : -1;
+			}
+			
+			// 都已完成时，按完成时间升序排列（最早的在前，最新的在后）
+			if (a.isCompleted && b.isCompleted) {
+				const timeA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+				const timeB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+				if (timeA === 0 && timeB === 0) return 0;
+				return timeA - timeB;
+			}
+			
+			return 0;
 		});
 		
-		// 先显示未完成的任务，再显示已完成的任务（已完成的任务排在后面）
-		return [...incompleteTasks, ...sortedCompletedTasks];
+		return sorted;
 	};
 
 	const filteredTasksRaw =

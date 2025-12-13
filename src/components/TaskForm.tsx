@@ -57,6 +57,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 				? task.dailyLimit
 				: undefined,
 		exceedDaysRewardFormula: task?.exceedDaysRewardFormula || '',
+		order: task?.order,
 	});
 	const [timeLimitType, setTimeLimitType] = useState<
 		'none' | 'expiresAt' | 'durationDays'
@@ -123,6 +124,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 			durationDays: undefined,
 			dailyLimit: undefined,
 			exceedDaysRewardFormula: '',
+			order: undefined,
 		});
 		setTimeLimitType('none');
 		setDurationDaysInput('');
@@ -224,6 +226,29 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 									placeholder="例如：早睡、喝水、锻炼..."
 									required
 								/>
+							</div>
+
+							<div>
+								<label className="block text-xs font-bold text-gray-600 mb-2 uppercase tracking-wide">
+									排序序号（可选）
+								</label>
+								<input
+									type="number"
+									min="1"
+									value={formData.order !== undefined ? formData.order : ''}
+									onChange={e => {
+										const value = e.target.value;
+										setFormData({
+											...formData,
+											order: value === '' ? undefined : parseInt(value) || undefined,
+										});
+									}}
+									className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+									placeholder="留空则自动分配"
+								/>
+								<p className="text-xs text-gray-500 mt-2 font-medium">
+									📋 设置任务显示顺序，序号小的排在前面。留空则自动分配序号
+								</p>
 							</div>
 
 							<div>

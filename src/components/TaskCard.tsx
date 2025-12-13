@@ -412,6 +412,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 				<div className="flex justify-between items-start mb-3">
 					<div className="flex-1 min-w-0">
 						<div className="flex items-center gap-2 mb-2 flex-wrap">
+							{task.order !== undefined && (
+								<span className="text-xs px-2 py-1 rounded-md font-bold shadow-sm bg-gray-200 text-gray-700 min-w-[2rem] text-center">
+									#{task.order}
+								</span>
+							)}
 							{task.isAvoidanceTask && (
 								<span className="text-xs px-2.5 py-1 rounded-md font-semibold shadow-sm bg-orange-500 text-white">
 									🎯 特殊挑战
